@@ -1,0 +1,98 @@
+
+# Project Summary: Agentic IAM System
+
+This document provides a comprehensive overview of the Agentic Identity & Access Management (IAM) system, including its high-level and low-level implementation details, as well as the motivation for building this project.
+
+---
+
+## Why This Project is Required
+
+Modern organizations face complex challenges in managing digital identities, access rights, and security risks. Traditional IAM systems are often static, hard to explain, and slow to adapt to new threats or compliance requirements. This project demonstrates an **agentic IAM architecture** that:
+
+- Enables autonomous, explainable, and adaptive management of identities, roles, entitlements, and policies.
+- Simulates real-world IAM scenarios, including risk assessment, policy enforcement, and automated remediation.
+- Provides transparency and traceability for all decisions and actions, supporting audit and compliance needs.
+- Serves as a research and demo platform for next-generation IAM solutions leveraging AI/LLM capabilities.
+
+---
+
+## High-Level Implementation
+
+### Backend (agentic-iam-backend/)
+
+- **Agent-Based Architecture:**
+  - The backend is organized around specialized agents: IdentityAgent, RiskAgent, PolicyAgent, DecisionAgent, RemediationAgent, and AuditAgent.
+  - Each agent encapsulates a single responsibility and exposes pure functions for its domain.
+  - The IAMController orchestrates agent interactions, exposing a unified API to the frontend.
+- **Stateless, In-Memory Data:**
+  - All data (identities, roles, entitlements, policies) is modeled in-memory using TypeScript classes.
+  - No external database; data is seeded at startup for simulation.
+- **REST API:**
+  - Exposes endpoints for all IAM operations under `/api`.
+  - Special endpoint for simulating anomalies (e.g., excessive privilege, toxic combinations).
+- **Explainability & Audit:**
+  - All decisions and remediations are logged and can be explained via the AuditAgent.
+  - Optional integration with OpenAI for richer, LLM-based explanations.
+
+### Frontend (agentic-iam-ui/)
+
+- **Modern React UI:**
+  - Built with React and TypeScript, using Vite for fast development.
+  - Tailwind CSS for styling and Framer Motion for smooth animations.
+- **Component-Based Design:**
+  - Components for identities, risk badges, remediation actions, explainability, and audit trails.
+  - Pages for dashboard, system metrics, login, and audit explainability.
+- **API Integration:**
+  - Communicates with backend via REST API (see `src/services/iamApi.ts`).
+  - Real-time updates and interactive simulation of IAM scenarios.
+
+---
+
+## Low-Level Implementation
+
+### Backend Details
+
+- **Agents (`src/agents/`):**
+  - Each agent is a TypeScript class with methods for its domain (e.g., `RiskAgent.assessRisk()`, `PolicyAgent.evaluatePolicy()`).
+  - Agents interact via direct method calls, not events or queues, for simplicity and traceability.
+- **Orchestration (`src/orchestrator/IAMController.ts`):**
+  - Coordinates agent calls for complex operations (e.g., access request evaluation, remediation workflows).
+  - Exposes high-level methods used by API routes.
+- **Models (`src/models/`):**
+  - Defines data structures for Identity, Role, Entitlement, and Policy.
+  - Used by agents and orchestrator for all in-memory operations.
+- **API (`src/api/routes.ts`):**
+  - Maps HTTP endpoints to orchestrator methods.
+  - Handles requests for simulation, audit, remediation, and explainability.
+- **Seed Data (`src/seed.ts`):**
+  - Populates the system with sample identities, roles, entitlements, and policies at startup.
+- **Testing (`tests/`):**
+  - Contains tests for risk, policy, and decision logic.
+
+### Frontend Details
+
+- **Components (`src/components/`):**
+  - `IdentityTable.tsx`: Displays all identities and their attributes.
+  - `RiskBadge.tsx`, `RiskLegend.tsx`: Visualize risk levels.
+  - `RemediationActions.tsx`: Shows and triggers remediation options.
+  - `ExplainabilityPanel.tsx`: Explains decisions and audit trails.
+  - `DecisionFlow.tsx`: Visualizes the flow of IAM decisions.
+- **Pages (`src/pages/`):**
+  - `Dashboard.tsx`: Main dashboard for IAM overview.
+  - `Identities.tsx`, `SystemMetrics.tsx`, `ExplainAudit.tsx`, `Login.tsx`: Specialized views for different IAM aspects.
+- **API Service (`src/services/iamApi.ts`):**
+  - Handles all REST API calls to the backend.
+- **Styling & Animation:**
+  - Tailwind CSS for utility-first styling.
+  - Framer Motion for UI animations.
+
+---
+
+## Integration Points
+- The frontend and backend communicate via the `/api` endpoints.
+- All actions and decisions are traceable via audit and remediation logs.
+- The system is designed for simulation, demo, and explainability of IAM scenarios.
+
+---
+
+For more details, see the respective `README.md` files in each folder and the `.github/copilot-instructions.md` for architectural conventions.

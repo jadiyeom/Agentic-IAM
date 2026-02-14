@@ -1,0 +1,42 @@
+# Node
+node_modules/
+.env
+.DS_Store
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# VSCode
+.vscode/
+
+# OS
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# IDEs
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Frontend
+agentic-iam-ui/node_modules/
+agentic-iam-ui/dist/
+
+# Backend
+agentic-iam-backend/node_modules/
+agentic-iam-backend/dist/
+agentic-iam-backend/coverage/
+agentic-iam-backend/src/huggingfaceConfig.ts
