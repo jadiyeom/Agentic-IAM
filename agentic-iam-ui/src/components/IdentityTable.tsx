@@ -104,14 +104,17 @@ export const IdentityTable: React.FC<{
                   </td>
                   <td className="px-4 py-2 align-top text-xs text-slate-200">
                     <div className="flex flex-wrap gap-1 mb-1">
-                      {vm.identity.roles.map((r) => (
-                        <span
-                          key={r}
-                          className="rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px]"
-                        >
-                          {r}
-                        </span>
-                      ))}
+                      {vm.identity.roles.map((r) => {
+                        const roleObj = roles.find(role => role.id === r);
+                        return (
+                          <span
+                            key={r}
+                            className="rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px]"
+                          >
+                            {roleObj ? roleObj.name : r}
+                          </span>
+                        );
+                      })}
                     </div>
                     <form className="flex gap-1 mt-1" onSubmit={e => handleAssignRole(e, vm.identity.id)}>
                       <select

@@ -24,15 +24,31 @@ export class RemediationAgent {
     const identity = snapshot.identities.get(identityId);
     if (!identity) return null;
 
+    // Get original (seeded) roles/entitlements for this identity
+    let originalRoles: string[] = [];
+    let originalEntitlements: string[] = [];
+    try {
+      // Dynamically import seedIdentities to avoid circular deps
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { seedIdentities } = require('../seed');
+      const original = seedIdentities().find((i: any) => i.id === identityId);
+      if (original) {
+        originalRoles = original.roles || [];
+        originalEntitlements = original.entitlements || [];
+      }
+    } catch {}
+
     if (outcome === 'AUTO_REMEDIATE' || outcome === 'RECOMMEND_REVOCATION') {
       const previousRoles = [...identity.roles];
       const revokedRoles: string[] = [];
 
       for (const roleId of previousRoles) {
-        // Revoke all roles for simplicity; more advanced logic could downgrade selectively.
-        this.identityAgent.revokeRole(identityId, roleId);
-        revokedRoles.push(roleId);
+        if (!originalRoles.includes(roleId)) {
+          this.identityAgent.revokeRole(identityId, roleId);
+          revokedRoles.push(roleId);
+        }
       }
+      // (Optional) If you want to handle entitlements similarly, add logic here
 
       const action: RemediationAction = {
         id: `auto-${Date.now()}-${identityId}`,

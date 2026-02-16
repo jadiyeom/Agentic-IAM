@@ -170,3 +170,15 @@ export async function fetchIdentityContext(identityId: string) {
   return res.data;
 }
 
+// Fetch all entitlements
+export async function getEntitlements() {
+  const res = await axios.get('/api/entitlements');
+  return res.data;
+}
+
+// Fetch all departments
+export async function getDepartments() {
+  const res = await axios.get('/api/departments');
+  return res.data;
+}
+

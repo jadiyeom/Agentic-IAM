@@ -16,6 +16,11 @@ type IdentityViewModel = {
   decision: any;
   audit: any;
   anomaly: boolean;
+  remediationStatus?: {
+    type: string;
+    timestamp: number;
+    details?: Record<string, unknown>;
+  };
 };
 
 type IAMMetrics = {
@@ -36,6 +41,11 @@ class IAMOrchestrator {
       const identity = state.identities.get(identityId);
       if (!identity) return null;
       this.identityAgent.assignRole(identityId, roleId);
+      // Remove all remediation actions for this identity so it reappears in Explainability & Audit
+      const remAgent = this.remediationAgent as any;
+      if (remAgent && Array.isArray(remAgent.auditLog)) {
+        remAgent.auditLog = remAgent.auditLog.filter((a: any) => a.identityId !== identityId);
+      }
       return this.identityAgent.getSnapshot().identities.get(identityId) ?? null;
     }
   private identityAgent: IdentityMonitoringAgent;
@@ -97,6 +107,18 @@ class IAMOrchestrator {
 
     const audit = await this.auditAgent.createRecord(identity, decision, risk, policy);
 
+    // Find latest remediation action for this identity
+    let remediationStatus = undefined;
+    const remLog = this.remediationAgent.getActions();
+    const lastAction = remLog.filter(a => a.identityId === identityId).sort((a, b) => b.timestamp - a.timestamp)[0];
+    if (lastAction) {
+      remediationStatus = {
+        type: lastAction.type,
+        timestamp: lastAction.timestamp,
+        details: lastAction.details,
+      };
+    }
+
     const end = Date.now();
     this.metrics.totalDecisions += 1;
     this.metrics.cumulativeDecisionTimeMs += end - start;
@@ -108,6 +130,7 @@ class IAMOrchestrator {
       decision,
       audit,
       anomaly,
+      remediationStatus,
     };
   }
 

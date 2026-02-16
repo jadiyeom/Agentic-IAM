@@ -5,6 +5,7 @@ import { Identities } from './pages/Identities';
 import { ExplainAudit } from './pages/ExplainAudit';
 import { SystemMetrics } from './pages/SystemMetrics';
 import { Login } from './pages/Login';
+import Entitlements from './pages/Entitlements';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -25,6 +26,7 @@ const NavBar: React.FC = () => {
     <nav className="flex gap-4 px-6 py-4 border-b border-slate-800 bg-slate-900 items-center">
       <span className="text-2xl font-bold text-accent mr-8">TrustLens IAM</span>
       <Link className="text-slate-100 font-semibold hover:text-accent" to="/identities">Identities</Link>
+      <Link className="text-slate-100 font-semibold hover:text-accent" to="/entitlements">Entitlements</Link>
       <Link className="text-slate-100 font-semibold hover:text-accent" to="/explain-audit">Explainability & Audit</Link>
       <Link className="text-slate-100 font-semibold hover:text-accent" to="/system-metrics">System Metrics</Link>
       <Link className="text-slate-100 font-semibold hover:text-accent" to="/dashboard">Dashboard (Legacy)</Link>
@@ -53,6 +55,7 @@ const App: React.FC = () => {
                   <main>
                     <Routes>
                       <Route path="/identities" element={<Identities />} />
+                      <Route path="/entitlements" element={<Entitlements />} />
                       <Route path="/explain-audit" element={<ExplainAudit />} />
                       <Route path="/system-metrics" element={<SystemMetrics />} />
                       <Route path="/dashboard" element={<Dashboard />} />
