@@ -1,4 +1,4 @@
-import { seedRoles } from '../seed';
+import { seedRoles, seedEntitlements, seedIdentities } from '../seed';
 import express from 'express';
 import { IAMOrchestrator } from '../orchestrator/IAMController';
 
@@ -211,6 +211,23 @@ export function createRouter(orchestrator: IAMOrchestrator) {
 
   router.get('/remediation-log', (_req, res) => {
     res.json(orchestrator.getRemediationLog());
+  });
+
+  // Entitlements endpoint (actually roles)
+  router.get('/entitlements', (_req, res) => {
+    res.json(roles);
+  });
+
+  // Departments endpoint
+  const identities = seedIdentities();
+  const deptCounts: Record<string, number> = {};
+  identities.forEach(i => {
+    const dept = i.attributes.department;
+    deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+  });
+  const departments = Array.from(new Set(identities.map(i => i.attributes.department)));
+  router.get('/departments', (_req, res) => {
+    res.json(departments.map(name => ({ id: name, name, count: deptCounts[name] })));
   });
 
   return router;

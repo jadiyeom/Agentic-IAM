@@ -5,6 +5,8 @@ import { DecisionAgent, DecisionResult } from '../agents/DecisionAgent';
 import { RemediationAgent, RemediationAction } from '../agents/RemediationAgent';
 import { AuditExplainabilityAgent, AuditRecord } from '../agents/AuditAgent';
 import { Identity } from '../models/Identity';
+import { Role } from '../models/Role';
+import { Entitlement } from '../models/Entitlement';
 import { v4 as uuidv4 } from 'uuid';
 
 type IdentityViewModel = {
@@ -45,8 +47,19 @@ class IAMOrchestrator {
   private metrics: IAMMetrics;
 
   constructor() {
-    this.identityAgent = new IdentityMonitoringAgent();
+    const { seedIdentities, seedRoles, seedEntitlements } = require('../seed');
+    const identities = seedIdentities();
+    const roles = seedRoles();
+    const entitlements = seedEntitlements();
+    this.identityAgent = new IdentityMonitoringAgent({
+      identities: new Map(identities.map((i: Identity) => [i.id, i])),
+      roles: new Map(roles.map((r: Role) => [r.id, r])),
+      entitlements: new Map(entitlements.map((e: Entitlement) => [e.id, e])),
+    });
     this.riskAgent = new RiskEvaluationAgent();
+    // Debug log: print all seeded identity names
+    // eslint-disable-next-line no-console
+    console.log('Seeded identities:', identities.map((i: Identity) => i.name));
     // Pass seeded policies to PolicyComplianceAgent
     const { seedPolicies } = require('../seed');
     this.policyAgent = new PolicyComplianceAgent(seedPolicies());
