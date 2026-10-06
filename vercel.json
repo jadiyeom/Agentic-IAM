@@ -1,0 +1,9 @@
+{
+  "installCommand": "npm install --prefix agentic-iam-backend && npm install --prefix agentic-iam-ui",
+  "buildCommand": "npm run build --prefix agentic-iam-ui",
+  "outputDirectory": "agentic-iam-ui/dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
