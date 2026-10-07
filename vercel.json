@@ -1,9 +1,14 @@
 {
-  "installCommand": "npm install --prefix agentic-iam-backend && npm install --prefix agentic-iam-ui",
-  "buildCommand": "npm run build --prefix agentic-iam-ui",
-  "outputDirectory": "agentic-iam-ui/dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "agentic-iam-backend": {
+      "root": "agentic-iam-backend",
+      "framework": "express"
+    },
+    "agentic-iam-ui": {
+      "root": "agentic-iam-ui",
+      "framework": "vite"
+    }
+  },
+  "rewrites": []
 }
