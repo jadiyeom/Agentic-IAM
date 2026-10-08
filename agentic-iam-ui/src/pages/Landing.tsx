@@ -74,8 +74,8 @@ export const Landing: React.FC = () => {
             <div className="product-preview mx-auto mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#101113] text-left">
               <div className="flex h-10 items-center border-b border-white/[0.07] px-4">
                 <div className="flex gap-1.5"><span className="h-2 w-2 rounded-full bg-white/15"/><span className="h-2 w-2 rounded-full bg-white/15"/><span className="h-2 w-2 rounded-full bg-white/15"/></div>
-                <span className="ml-4 font-mono text-[9px] text-white/22">app.steerpast.dev / security-overview</span>
-                <span className="ml-auto flex items-center gap-2 text-[9px] text-[#b7ff49]/70"><span className="h-1.5 w-1.5 rounded-full bg-[#b7ff49]"/>Evaluation live</span>
+                <span className="ml-4 font-mono text-[9px] text-white/22">steerpast.com / security-overview</span>
+                <span className="ml-auto flex items-center gap-2 text-[9px] text-white/35"><span className="h-1.5 w-1.5 rounded-full bg-white/35"/>Product preview</span>
               </div>
               <div className="grid md:grid-cols-[180px_1fr]">
                 <aside className="hidden border-r border-white/[0.06] p-4 md:block">
