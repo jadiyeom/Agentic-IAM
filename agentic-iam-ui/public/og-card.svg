@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs><linearGradient id="glow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b7ff49" stop-opacity=".18"/><stop offset="1" stop-color="#00ed4f" stop-opacity="0"/></linearGradient></defs>
+<rect width="1200" height="630" fill="#08090a"/>
+<circle cx="820" cy="90" r="420" fill="url(#glow)"/>
+<text x="70" y="110" fill="#f4f1e7" font-family="Arial,sans-serif" font-size="28" font-weight="700">Steerpast IAM</text>
+<text x="70" y="260" fill="#f4f1e7" font-family="Georgia,serif" font-size="72">Security for identities</text>
+<text x="70" y="340" fill="#8f928e" font-family="Georgia,serif" font-size="72">that can act on their own.</text>
+<text x="70" y="430" fill="#8f928e" font-family="Arial,sans-serif" font-size="22">Identity context · Risk · Policy · Claude · Remediation · Audit</text>
+<rect x="70" y="484" width="270" height="46" rx="23" fill="#b7ff49"/>
+<text x="205" y="514" fill="#08090a" font-family="Arial,sans-serif" font-size="17" font-weight="700" text-anchor="middle">steerpast.com</text>
+</svg>
