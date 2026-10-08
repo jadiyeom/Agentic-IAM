@@ -7,9 +7,9 @@ This service implements an agentic Identity & Access Management backend with aut
 - **IdentityMonitoringAgent** (`agents/IdentityAgent.ts`): Maintains identities, roles, entitlements, and state history, and emits structured change events.
 - **RiskEvaluationAgent** (`agents/RiskAgent.ts`): Computes 0–100 risk scores using role sensitivity, seniority alignment, peer-group comparison, and historical change patterns.
 - **PolicyComplianceAgent** (`agents/PolicyAgent.ts`): Evaluates least privilege, segregation of duties (SoD), and role eligibility policies.
-- **DecisionAgent** (`agents/DecisionAgent.ts`): Consumes risk and policy outputs plus identity context and produces a reasoned decision: APPROVE, FLAG_FOR_REVIEW, RECOMMEND_REVOCATION, or AUTO_REMEDIATE. Uses OpenAI when `OPENAI_API_KEY` is set, otherwise falls back to a heuristic model.
+- **DecisionAgent** (`agents/DecisionAgent.ts`): Consumes risk and policy outputs plus identity context and produces a reasoned decision: APPROVE, FLAG_FOR_REVIEW, RECOMMEND_REVOCATION, or AUTO_REMEDIATE. Uses Claude when `ANTHROPIC_API_KEY` is set, otherwise falls back to deterministic heuristics. The active provider is exposed as `decisionProvider` in the API response.
 - **RemediationAgent** (`agents/RemediationAgent.ts`): Executes decisions by revoking access, downgrading roles, or creating review tasks, and logs all actions for audit.
-- **AuditExplainabilityAgent** (`agents/AuditAgent.ts`): Produces natural-language explanations and audit records for each decision, optionally using OpenAI for richer text.
+- **AuditExplainabilityAgent** (`agents/AuditAgent.ts`): Produces natural-language explanations and audit records for each decision, using the project's explainability layer and retained audit context.
 - **IAMOrchestrator** (`orchestrator/IAMController.ts`): Coordinates all agents, maintains metrics, and exposes a high-level API surface to the Express routes.
 
 ### API
@@ -60,5 +60,5 @@ For development:
 npm run dev
 ```
 
-Set `OPENAI_API_KEY` in a `.env` file to enable LLM-backed decisioning and explanations.
+Set `ANTHROPIC_API_KEY` in a `.env` file to enable Claude-backed decisioning. Optionally set `ANTHROPIC_MODEL` (default: `claude-sonnet-4-5`). The API key is server-side only.
 
