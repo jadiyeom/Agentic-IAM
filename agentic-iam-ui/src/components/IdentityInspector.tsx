@@ -69,7 +69,8 @@ export const IdentityInspector: React.FC<Props> = ({ viewModel, roles, onClose, 
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-white/45">
             <span className="inline-flex items-center gap-1"><Briefcase className="h-3 w-3" aria-hidden="true" />{identity.attributes.department}</span>
             <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" aria-hidden="true" />{identity.attributes.location}</span>
-            <span>{identity.attributes.employmentType.replace('_', ' ').toLowerCase()}</span>
+            <span>{identity.attributes.identityType === 'AI_AGENT' ? 'AI agent' : identity.attributes.identityType === 'SERVICE' ? 'Service account' : identity.attributes.employmentType.replace('_', ' ').toLowerCase()}</span>
+            {identity.attributes.owner && <span>Owner: {identity.attributes.owner}</span>}
           </div>
         </div>
         {onClose && (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
+import { Reveal, ScrollProgress } from '../components/motion';
 
 const demo = () => localStorage.setItem('steerpast-iam-auth', 'true');
 
@@ -16,7 +17,8 @@ const publicLinks = [
 ] as const;
 
 export const PublicLayout: React.FC<{ eyebrow: string; title: string; intro: string; children: React.ReactNode }> = ({ eyebrow, title, intro, children }) => (
-  <div className="min-h-screen bg-[#08090a] text-[#eeeae0]">
+  <div className="grain min-h-screen bg-[#08090a] text-[#eeeae0]">
+    <ScrollProgress />
     <a href="#main" className="skip-link">Skip to content</a>
     <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#08090a]/90 backdrop-blur-xl">
       <nav className="mx-auto flex h-[68px] max-w-[1160px] items-center justify-between px-5 lg:px-8">
@@ -41,13 +43,14 @@ export const PublicLayout: React.FC<{ eyebrow: string; title: string; intro: str
     </header>
 
     <main id="main">
-      <section className="mx-auto max-w-[1000px] px-5 pb-20 pt-24 lg:px-8 lg:pt-32">
-        <div className="max-w-3xl">
+      <section className="relative mx-auto max-w-[1000px] px-5 pb-20 pt-24 lg:px-8 lg:pt-32">
+        <div aria-hidden="true" className="aurora opacity-60" />
+        <Reveal className="relative max-w-3xl">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">{eyebrow}</div>
           <h1 className="mt-5 font-serif text-[44px] font-medium leading-[1.02] tracking-[-0.035em] sm:text-6xl sm:leading-[.98]">{title}</h1>
           <p className="mt-6 text-[15px] leading-7 text-white/60">{intro}</p>
-        </div>
-        <div className="mt-14">{children}</div>
+        </Reveal>
+        <Reveal className="relative mt-14" delay={0.12}>{children}</Reveal>
       </section>
     </main>
 

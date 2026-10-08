@@ -65,19 +65,8 @@ p, li { text-wrap: pretty; }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.landing-page main > section {
-  animation: steerpast-fade-up .7s cubic-bezier(.22,1,.36,1) both;
-}
-.landing-page main > section:nth-child(2) { animation-delay: .06s; }
-.landing-page main > section:nth-child(3) { animation-delay: .12s; }
-.landing-page main > section:nth-child(4) { animation-delay: .18s; }
-.landing-page main > section:nth-child(5) { animation-delay: .24s; }
-.landing-page main > section:nth-child(6) { animation-delay: .30s; }
-.landing-page main > section:nth-child(7) { animation-delay: .36s; }
-.landing-page main > section:nth-child(8) { animation-delay: .42s; }
 .landing-page a,
 .landing-page button { transition: all .2s ease; }
-.landing-page .product-preview { animation: steerpast-float 6s ease-in-out infinite; }
 .landing-page .product-preview:hover { box-shadow: 0 40px 120px rgba(0,0,0,.58); }
 
 .animate-rise { animation: steerpast-rise .55s cubic-bezier(.22,1,.36,1) both; }
@@ -85,8 +74,8 @@ p, li { text-wrap: pretty; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .landing-page main > section,
   .landing-page .product-preview,
+  .aurora, .beam, .shimmer-text, .ring-spin::before,
   .animate-rise,
   .animate-modal,
   .animate-drawer { animation: none !important; }
@@ -106,3 +95,81 @@ p, li { text-wrap: pretty; }
 .surface-soft { background: linear-gradient(180deg, rgba(17,18,21,.88), rgba(11,12,14,.88)); }
 .landing-page .surface-soft { background: linear-gradient(180deg, rgba(17,18,21,.88), rgba(11,12,14,.88)); }
 .landing-page .lime-ring:focus-visible { outline: 2px solid rgba(183,255,73,.75); outline-offset: 3px; }
+
+
+/* ---------------------------------------------------------------- */
+/* Premium motion layer                                              */
+/* ---------------------------------------------------------------- */
+
+/* Cursor spotlight + border glow (see components/motion.tsx Spotlight) */
+.spotlight { isolation: isolate; }
+.spotlight::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), var(--spot), transparent 42%);
+  opacity: 0; transition: opacity .35s ease;
+}
+.spotlight::after {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; z-index: 0; padding: 1px;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(183,255,73,.45), transparent 45%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity .35s ease;
+}
+.spotlight:hover::before, .spotlight:hover::after { opacity: 1; }
+.spotlight > *:not(.absolute) { position: relative; z-index: 1; }
+.spotlight > .absolute { z-index: 2; }
+
+/* Slow-drifting aurora behind the hero */
+@keyframes aurora-drift {
+  0% { transform: translate3d(-6%, -4%, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(5%, 3%, 0) rotate(8deg) scale(1.08); }
+  100% { transform: translate3d(-6%, -4%, 0) rotate(0deg) scale(1); }
+}
+.aurora {
+  position: absolute; left: 50%; top: -220px; width: 1100px; height: 640px; margin-left: -550px; pointer-events: none;
+  background:
+    radial-gradient(40% 50% at 30% 40%, rgba(183,255,73,.16), transparent 70%),
+    radial-gradient(35% 45% at 70% 35%, rgba(94,234,212,.10), transparent 70%),
+    radial-gradient(30% 40% at 50% 70%, rgba(183,255,73,.07), transparent 70%);
+  filter: blur(40px); animation: aurora-drift 18s ease-in-out infinite;
+}
+
+/* Light beam travelling down a vertical rail */
+@keyframes beam-fall { 0% { transform: translateY(-120%); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(520%); opacity: 0; } }
+.beam { position: absolute; left: 0; width: 1px; height: 22%; background: linear-gradient(to bottom, transparent, #b7ff49, transparent); animation: beam-fall 3.6s cubic-bezier(.6,0,.4,1) infinite; }
+
+/* Shimmering text sweep */
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.shimmer-text {
+  background: linear-gradient(110deg, rgba(238,234,224,.55) 35%, #fff 50%, rgba(238,234,224,.55) 65%);
+  background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+/* Rotating conic border for the featured pricing card */
+@property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes spin-angle { to { --angle: 360deg; } }
+.ring-spin { position: relative; }
+.ring-spin::before {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: conic-gradient(from var(--angle), transparent 0 70%, rgba(183,255,73,.9) 85%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: spin-angle 5s linear infinite;
+}
+
+/* Pulsing status dot */
+@keyframes ping-soft { 0% { transform: scale(1); opacity: .7; } 80%, 100% { transform: scale(2.4); opacity: 0; } }
+.ping-dot { position: relative; }
+.ping-dot::after { content: ''; position: absolute; inset: 0; border-radius: 999px; background: currentColor; animation: ping-soft 2s cubic-bezier(0,0,.2,1) infinite; }
+
+/* Noise grain to kill gradient banding */
+.grain::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: .035; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora, .beam, .shimmer-text, .ring-spin::before, .ping-dot::after { animation: none !important; }
+  .shimmer-text { color: #eeeae0; background: none; }
+}

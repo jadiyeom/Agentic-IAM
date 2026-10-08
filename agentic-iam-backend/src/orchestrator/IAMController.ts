@@ -8,6 +8,7 @@ import { Identity } from '../models/Identity';
 import { Role } from '../models/Role';
 import { Entitlement } from '../models/Entitlement';
 import { v4 as uuidv4 } from 'uuid';
+import { RISK_TIERS, riskTier } from '../riskTiers';
 
 type IdentityViewModel = {
   identity: Identity;
@@ -48,15 +49,30 @@ class IAMOrchestrator {
       }
       return this.identityAgent.getSnapshot().identities.get(identityId) ?? null;
     }
-  private identityAgent: IdentityMonitoringAgent;
-  private riskAgent: RiskEvaluationAgent;
-  private policyAgent: PolicyComplianceAgent;
-  private decisionAgent: DecisionAgent;
-  private remediationAgent: RemediationAgent;
-  private auditAgent: AuditExplainabilityAgent;
-  private metrics: IAMMetrics;
+  private identityAgent!: IdentityMonitoringAgent;
+  private riskAgent!: RiskEvaluationAgent;
+  private policyAgent!: PolicyComplianceAgent;
+  private decisionAgent!: DecisionAgent;
+  private remediationAgent!: RemediationAgent;
+  private auditAgent!: AuditExplainabilityAgent;
+  private metrics!: IAMMetrics;
+  private startedAt = Date.now();
+  private lastRunAt: number | null = null;
+  private latestDecisions = new Map<string, { outcome: string; at: number; provider: string; latencyMs: number }>();
 
   constructor() {
+    this.init();
+  }
+
+  /** Restore the seeded demo state. */
+  reset() {
+    this.init();
+  }
+
+  private init() {
+    this.startedAt = Date.now();
+    this.lastRunAt = null;
+    this.latestDecisions = new Map();
     const { seedIdentities, seedRoles, seedEntitlements } = require('../seed');
     const identities = seedIdentities();
     const roles = seedRoles();
@@ -67,9 +83,6 @@ class IAMOrchestrator {
       entitlements: new Map(entitlements.map((e: Entitlement) => [e.id, e])),
     });
     this.riskAgent = new RiskEvaluationAgent();
-    // Debug log: print all seeded identity names
-    // eslint-disable-next-line no-console
-    console.log('Seeded identities:', identities.map((i: Identity) => i.name));
     // Pass seeded policies to PolicyComplianceAgent
     const { seedPolicies } = require('../seed');
     this.policyAgent = new PolicyComplianceAgent(seedPolicies());
@@ -98,7 +111,7 @@ class IAMOrchestrator {
     const decision = await this.decisionAgent.decide({ identity, risk, policy });
 
     const anomaly =
-      risk.riskScore >= 70 || policy.violations.some((v: any) => v.severity === 'HIGH' || v.severity === 'CRITICAL');
+      risk.riskScore >= RISK_TIERS.high || policy.violations.some((v: any) => v.severity === 'HIGH' || v.severity === 'CRITICAL');
 
     if (anomaly) {
       this.metrics.anomaliesDetected += 1;
@@ -122,6 +135,13 @@ class IAMOrchestrator {
     const end = Date.now();
     this.metrics.totalDecisions += 1;
     this.metrics.cumulativeDecisionTimeMs += end - start;
+    this.lastRunAt = end;
+    this.latestDecisions.set(identityId, {
+      outcome: decision.outcome,
+      at: end,
+      provider: decision.decisionProvider,
+      latencyMs: end - start,
+    });
 
     return {
       identity,
@@ -137,13 +157,9 @@ class IAMOrchestrator {
   async evaluateAllIdentities(): Promise<IdentityViewModel[]> {
     const state = this.identityAgent.getSnapshot();
     const ids = Array.from(state.identities.keys());
-    const results: IdentityViewModel[] = [];
-
-    for (const id of ids) {
-      const res = await this.evaluateIdentity(id);
-      if (res) results.push(res);
-    }
-    return results;
+    // Evaluate in parallel: model calls dominate latency, and each identity is independent.
+    const results = await Promise.all(ids.map((id) => this.evaluateIdentity(id)));
+    return results.filter((r): r is IdentityViewModel => r !== null);
   }
 
 
@@ -175,7 +191,18 @@ class IAMOrchestrator {
   }
 
   autoRemediate(identityId: string, outcome: DecisionResult['outcome']): RemediationAction | null {
-    return this.remediationAgent.autoRemediate(identityId, outcome);
+    const state = this.identityAgent.getSnapshot();
+    const identity = state.identities.get(identityId);
+    if (!identity) return null;
+    // Target the roles the policy engine actually objected to.
+    const policy = this.policyAgent.evaluate(identity, state);
+    const offending = new Set<string>();
+    for (const v of policy.violations) {
+      const d = v.details as Record<string, unknown>;
+      if (v.policyType === 'ROLE_ELIGIBILITY' && typeof d.roleId === 'string') offending.add(d.roleId);
+      if (v.policyType === 'SOD' && Array.isArray(d.roles) && typeof d.roles[1] === 'string') offending.add(d.roles[1]);
+    }
+    return this.remediationAgent.autoRemediate(identityId, outcome, Array.from(offending));
   }
 
   overrideDecision(identityId: string, previousOutcome: DecisionResult['outcome'], reason: string): RemediationAction {
@@ -201,71 +228,77 @@ class IAMOrchestrator {
     return fullIdentity;
   }
 
-  // Audit timeline
+  // Audit timeline: the most recent pipeline run, reconstructed from the audit log.
   async getAuditTimeline() {
-    // Return dummy timeline for now
+    const records = this.auditAgent.getRecords();
+    const last = records[records.length - 1];
+    if (!last) return [];
+    const fmt = (t: number) => new Date(t).toISOString();
+    const identity = this.getIdentity(last.identityId);
+    const name = identity?.name ?? last.identityId;
     return [
-      { time: '8:13 PM', label: 'Identity evaluated' },
-      { time: '8:13 PM', label: 'Risk computed' },
-      { time: '8:13 PM', label: 'Policy checked' },
-      { time: '8:13 PM', label: 'Decision issued' },
+      { time: fmt(last.timestamp), label: `IdentityAgent loaded context for ${name}` },
+      { time: fmt(last.timestamp), label: `RiskAgent scored ${last.risk.riskScore}/100 (${riskTier(last.risk.riskScore).toLowerCase()})` },
+      { time: fmt(last.timestamp), label: `PolicyAgent found ${last.policy.violations.length} violation(s)` },
+      { time: fmt(last.timestamp), label: `DecisionAgent issued ${last.decision.outcome.replace(/_/g, ' ').toLowerCase()}` },
     ];
   }
 
   // Audit export
   async exportAuditLog() {
-    // Return all audit records
     return this.auditAgent.getRecords();
   }
 
-  // Risk distribution
+  // Risk distribution, using the shared tier thresholds.
   async getRiskDistribution() {
     const all = await this.evaluateAllIdentities();
-    return {
-      low: all.filter(vm => vm.risk.riskScore >= 0 && vm.risk.riskScore <= 5).length,
-      medium: all.filter(vm => vm.risk.riskScore >= 6 && vm.risk.riskScore <= 12).length,
-      high: all.filter(vm => vm.risk.riskScore >= 13).length,
-    };
+    const counts = { low: 0, medium: 0, high: 0 };
+    for (const vm of all) counts[riskTier(vm.risk.riskScore).toLowerCase() as 'low' | 'medium' | 'high'] += 1;
+    return counts;
   }
 
-  // Decision volume
+  // Current decision mix across identities (one latest decision per identity).
   async getDecisionVolume() {
-    // Dummy: return decisions per day
-    return [
-      { day: 'Mon', count: 120 },
-      { day: 'Tue', count: 140 },
-      { day: 'Wed', count: 110 },
-      { day: 'Thu', count: 130 },
-      { day: 'Fri', count: 150 },
-    ];
+    const labels: Record<string, string> = {
+      APPROVE: 'Approve',
+      FLAG_FOR_REVIEW: 'Review',
+      RECOMMEND_REVOCATION: 'Revoke',
+      AUTO_REMEDIATE: 'Auto-fix',
+    };
+    if (this.latestDecisions.size === 0) await this.evaluateAllIdentities();
+    const counts: Record<string, number> = { APPROVE: 0, FLAG_FOR_REVIEW: 0, RECOMMEND_REVOCATION: 0, AUTO_REMEDIATE: 0 };
+    for (const d of this.latestDecisions.values()) counts[d.outcome] = (counts[d.outcome] ?? 0) + 1;
+    return Object.entries(counts).map(([outcome, count]) => ({ day: labels[outcome] ?? outcome, outcome, count }));
   }
 
-  // Agent health
+  // Agent health, from real pipeline activity.
   async getAgentHealth() {
+    const mean = this.metrics.totalDecisions > 0 ? this.metrics.cumulativeDecisionTimeMs / this.metrics.totalDecisions : 0;
+    const ago = this.lastRunAt ? Math.max(0, Math.round((Date.now() - this.lastRunAt) / 1000)) : null;
+    const lastRun = ago === null ? 'not yet' : ago < 60 ? `${ago}s ago` : `${Math.round(ago / 60)}m ago`;
     return {
       status: 'Active',
-      lastRun: '2m ago',
+      lastRun,
       policiesLoaded: this.policyAgent.getPolicyCount(),
-      latency: 120,
+      latency: Math.round(mean * 100) / 100,
+      decisionProvider: process.env.ANTHROPIC_API_KEY ? 'claude' : 'heuristic',
+      model: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5' : null,
+      uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000),
     };
   }
 
-  // Identity context
+  // Identity context: history, owner, and past decisions from the audit trail.
   async getIdentityContext(id: string) {
     const vm = await this.evaluateIdentity(id);
     if (!vm) return null;
-    // Dummy context
+    const records = this.auditAgent.getRecords().filter((r) => r.identityId === id);
     return {
-      lastLogin: '2026-02-07T20:13:00Z',
-      manager: 'Alex Manager',
-      accessHistory: [
-        { time: '2026-02-07T19:00:00Z', action: 'Login' },
-        { time: '2026-02-07T18:00:00Z', action: 'Role change' },
-      ],
-      riskTrend: [5, 7, 12, 16],
-      pastDecisions: [
-        { time: '2026-02-07T20:13:00Z', outcome: vm.decision.outcome },
-      ],
+      owner: vm.identity.attributes.owner ?? null,
+      identityType: vm.identity.attributes.identityType ?? 'HUMAN',
+      accessHistory: vm.identity.history.map((h) => ({ time: new Date(h.timestamp).toISOString(), roles: h.roles, status: h.status })),
+      riskTrend: records.slice(-12).map((r) => r.risk.riskScore),
+      pastDecisions: records.slice(-5).map((r) => ({ time: new Date(r.timestamp).toISOString(), outcome: r.decision.outcome })),
+      remediation: this.remediationAgent.getActions().filter((a) => a.identityId === id),
     };
   }
 

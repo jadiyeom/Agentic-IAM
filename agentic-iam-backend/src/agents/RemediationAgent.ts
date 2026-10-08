@@ -15,11 +15,16 @@ export class RemediationAgent {
 
   constructor(private identityAgent: IdentityMonitoringAgent) {}
 
+  private push(action: RemediationAction) {
+    this.auditLog.push(action);
+    if (this.auditLog.length > 500) this.auditLog.splice(0, this.auditLog.length - 500);
+  }
+
   getActions(): RemediationAction[] {
     return [...this.auditLog];
   }
 
-  autoRemediate(identityId: string, outcome: DecisionOutcome): RemediationAction | null {
+  autoRemediate(identityId: string, outcome: DecisionOutcome, offendingRoles: string[] = []): RemediationAction | null {
     const snapshot = this.identityAgent.getSnapshot();
     const identity = snapshot.identities.get(identityId);
     if (!identity) return null;
@@ -42,8 +47,12 @@ export class RemediationAgent {
       const previousRoles = [...identity.roles];
       const revokedRoles: string[] = [];
 
-      for (const roleId of previousRoles) {
-        if (!originalRoles.includes(roleId)) {
+      // Prefer the roles the policy engine flagged; otherwise roll back to the baseline.
+      const targets = offendingRoles.length
+        ? previousRoles.filter((r) => offendingRoles.includes(r))
+        : previousRoles.filter((r) => !originalRoles.includes(r));
+      for (const roleId of targets) {
+        {
           this.identityAgent.revokeRole(identityId, roleId);
           revokedRoles.push(roleId);
         }
@@ -60,7 +69,7 @@ export class RemediationAgent {
           revokedRoles,
         },
       };
-      this.auditLog.push(action);
+      this.push(action);
       return action;
     }
 
@@ -75,7 +84,7 @@ export class RemediationAgent {
           message: 'Access review task created by RemediationAgent.',
         },
       };
-      this.auditLog.push(action);
+      this.push(action);
       return action;
     }
 
@@ -91,7 +100,7 @@ export class RemediationAgent {
       timestamp: Date.now(),
       details: { reason },
     };
-    this.auditLog.push(action);
+    this.push(action);
     return action;
   }
 }

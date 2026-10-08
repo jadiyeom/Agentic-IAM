@@ -22,20 +22,16 @@ export class RiskEvaluationAgent {
       .map((id) => state.roles.get(id))
       .filter((r): r is Role => !!r);
 
-    // Role sensitivity: map qualitative sensitivity to numeric and aggregate.
+    // Role sensitivity (0–100): driven by the most sensitive role held,
+    // plus a small increment for every additional role.
     const sensitivityWeights: Record<Role['sensitivity'], number> = {
       LOW: 0.1,
       MEDIUM: 0.4,
       HIGH: 0.7,
       CRITICAL: 1.0,
     };
-
-    const maxPossibleSensitivityScore = 100;
-    const rawSensitivity = roles.reduce(
-      (sum, role) => sum + sensitivityWeights[role.sensitivity] * 25,
-      0
-    );
-    const roleSensitivityScore = Math.min(rawSensitivity, maxPossibleSensitivityScore);
+    const maxWeight = roles.reduce((m, r) => Math.max(m, sensitivityWeights[r.sensitivity]), 0);
+    const roleSensitivityScore = roles.length === 0 ? 0 : Math.min(100, maxWeight * 80 + (roles.length - 1) * 10);
 
     // Seniority alignment: compare seniority vs aggregate sensitivity level.
     const seniorityOrder: Identity['attributes']['seniority'][] = [
@@ -67,7 +63,7 @@ export class RiskEvaluationAgent {
     const seniorityIndex = seniorityOrder.indexOf(identity.attributes.seniority);
     const expectedIndexForSensitivity = Math.min(4, Math.round(avgSensitivityLevel + 1)); // ~MEDIUM->JUNIOR/MID, HIGH->SENIOR, CRITICAL->EXECUTIVE
     const misalignment = Math.max(0, expectedIndexForSensitivity - seniorityIndex);
-    const seniorityAlignmentScore = misalignment * 20; // each level of mismatch adds 20 risk
+    const seniorityAlignmentScore = Math.min(100, misalignment * 25); // each level of mismatch adds 25 (0–100)
 
     // Peer anomaly: compare role set to peers sharing department and similar seniority.
     const peers = Array.from(state.identities.values()).filter((peer) => {
@@ -87,21 +83,22 @@ export class RiskEvaluationAgent {
         const freq = roleFrequency[roleId] ?? 0;
         return freq === 0;
       });
-      // More rare roles -> higher anomaly. Cap at 40.
-      peerAnomalyScore = Math.min(rareRoles.length * 10, 40);
+      // Roles no departmental peer holds are anomalous (0–100).
+      peerAnomalyScore = Math.min(rareRoles.length * 25, 100);
     }
 
     // Historical change score: frequent privilege changes increase risk.
     const history = identity.history;
     let historicalChangeScore = 0;
-    if (history.length > 1) {
+    if (history.length > 0) {
       const windowMs = 7 * 24 * 60 * 60 * 1000; // last 7 days
       const now = Date.now();
       const recent = history.filter((h) => now - h.timestamp <= windowMs);
       const changeCount = recent.length;
-      historicalChangeScore = Math.min(changeCount * 5, 30);
+      historicalChangeScore = Math.min(changeCount * 15, 100);
     }
 
+    // Every factor is on a 0–100 scale, so the weighted sum is too.
     const totalRisk = Math.min(
       roleSensitivityScore * 0.4 +
         seniorityAlignmentScore * 0.3 +

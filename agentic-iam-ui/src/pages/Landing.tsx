@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { CountUp, EASE_OUT, Magnetic, Reveal, ScrollProgress, Spotlight, Stagger, StaggerItem, TiltIn, rise, stagger } from '../components/motion';
 import { Menu, X, ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTriangle, Check, ChevronRight, Database, KeyRound, Sparkles, Fingerprint, Network, ScanSearch, Plus, Cpu, ServerCog, ArrowUpRight } from 'lucide-react';
 
 const demo = () => localStorage.setItem('steerpast-iam-auth','true');
@@ -35,6 +37,7 @@ export const Landing: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [activeSection, setActiveSection] = useState('product');
   const [menuOpen, setMenuOpen] = useState(false);
+  const reduce = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -66,7 +69,8 @@ export const Landing: React.FC = () => {
   }, []);
 
   return (
-    <div className="landing-page min-h-screen bg-[#08090a] text-[#eeeae0] selection:bg-[#b7ff49]/20">
+    <div className="landing-page grain min-h-screen bg-[#08090a] text-[#eeeae0] selection:bg-[#b7ff49]/20">
+      <ScrollProgress />
       <a href="#main" className="skip-link">Skip to content</a>
       <header className={`sticky top-0 z-50 border-b backdrop-blur-xl transition-colors duration-300 ${scrolled ? 'border-white/[0.08] bg-[#08090a]/85' : 'border-transparent bg-[#08090a]/40'}`}>
         <nav className="mx-auto flex h-[68px] max-w-[1160px] items-center justify-between px-5 lg:px-8">
@@ -106,36 +110,42 @@ export const Landing: React.FC = () => {
       <main id="main">
         <section id="top" className="relative -mt-[68px] overflow-hidden pt-[68px]">
           <div aria-hidden="true" className="grid-fade pointer-events-none absolute inset-x-0 top-0 h-[720px]" />
-          <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-[560px] w-[900px] max-w-full -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(183,255,73,0.10),transparent_62%)]" />
+          <div aria-hidden="true" className="aurora" />
           <div className="relative mx-auto max-w-[1000px] px-5 pb-28 pt-20 text-center lg:pt-28">
-            <div className="mb-8 flex justify-center">
+            <motion.div variants={stagger(0.09, 0.05)} initial={reduce ? "show" : "hidden"} animate="show">
+            <motion.div variants={rise} className="mb-8 flex justify-center">
               <div className="relative">
                 <div className="absolute inset-[-18px] rounded-[28px] bg-[#b7ff49]/10 blur-2xl" />
                 <img src="/steerpast-logo.png" alt="Steerpast" width="80" height="80" className="relative h-16 w-16 rounded-[18px] object-cover shadow-[0_12px_48px_rgba(183,255,73,.12)] sm:h-20 sm:w-20 sm:rounded-[22px]" />
               </div>
-            </div>
-            <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-white/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#b7ff49] shadow-[0_0_12px_rgba(183,255,73,.7)]" />
+            </motion.div>
+            <motion.div variants={rise} className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-white/70">
+              <span className="ping-dot h-1.5 w-1.5 rounded-full bg-[#b7ff49] text-[#b7ff49] shadow-[0_0_12px_rgba(183,255,73,.7)]" />
               Identity security for the agentic era
-            </div>
-            <h1 className="mx-auto max-w-4xl font-serif text-[44px] font-medium leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[80px] lg:leading-[.98]">
-              Security for identities <br className="hidden sm:block" /><span className="italic text-white/55">that can act on their own.</span>
-            </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-[16px] leading-7 text-white/65 sm:text-[17px] sm:leading-8">
-              A security control plane for human and AI-agent access. See what exists, understand what is risky, and turn every important decision into an auditable action.</p>
-            <p className="mx-auto mt-3 max-w-md text-[13px] leading-6 text-white/45"><Cpu className="mr-1.5 inline h-3.5 w-3.5 -translate-y-px text-[#b7ff49]/70" aria-hidden="true" />Model-backed decisioning runs through Claude via the Anthropic API.
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/demo" onClick={demo} className="inline-flex h-11 items-center gap-2 rounded-full bg-[#b7ff49] px-5 text-[13px] font-semibold text-[#08090a] transition hover:bg-[#d0ff88]">
-                Explore the live demo <ArrowRight className="h-4 w-4" />
-              </Link>
+            </motion.div>
+            <motion.h1 variants={rise} className="mx-auto max-w-4xl font-serif text-[44px] font-medium leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[80px] lg:leading-[.98]">
+              Security for identities <br className="hidden sm:block" /><span className="shimmer-text italic">that can act on their own.</span>
+            </motion.h1>
+            <motion.p variants={rise} className="mx-auto mt-7 max-w-2xl text-[16px] leading-7 text-white/65 sm:text-[17px] sm:leading-8">
+              A security control plane for human and AI-agent access. See what exists, understand what is risky, and turn every important decision into an auditable action.</motion.p>
+            <motion.p variants={rise} className="mx-auto mt-3 max-w-md text-[13px] leading-6 text-white/45"><Cpu className="mr-1.5 inline h-3.5 w-3.5 -translate-y-px text-[#b7ff49]/70" aria-hidden="true" />Model-backed decisioning runs through Claude via the Anthropic API.
+            </motion.p>
+            <motion.div variants={rise} className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Magnetic>
+                <Link to="/demo" onClick={demo} className="group inline-flex h-11 items-center gap-2 rounded-full bg-[#b7ff49] px-5 text-[13px] font-semibold text-[#08090a] shadow-[0_0_0_1px_rgba(183,255,73,.4),0_8px_30px_rgba(183,255,73,.25)] transition hover:bg-[#d0ff88] hover:shadow-[0_0_0_1px_rgba(183,255,73,.6),0_10px_40px_rgba(183,255,73,.4)]">
+                  Explore the live demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </Magnetic>
               <a href="#product" className="inline-flex h-11 items-center gap-1.5 rounded-full border border-white/10 px-5 text-[13px] text-white/55 transition hover:border-white/20 hover:text-white">
                 See how it works <ChevronRight className="h-4 w-4" />
               </a>
-            </div>
+            </motion.div>
+
+            </motion.div>
 
             <div className="mt-16 flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.16em] text-white/45"><span>A product preview</span><span className="rounded-full border border-white/10 px-2 py-0.5 text-[8px] tracking-[0.12em] text-white/50">synthetic demo data</span></div>
-            <div className="product-preview surface-lift mx-auto mt-5 overflow-hidden rounded-[24px] border text-left">
+            <TiltIn className="product-preview surface-lift relative mx-auto mt-5 overflow-hidden rounded-[24px] border text-left">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-[#b7ff49]/60 to-transparent" />
               <div className="flex h-10 items-center border-b border-white/[0.07] px-4">
                 <div className="flex gap-1.5"><span className="h-2 w-2 rounded-full bg-white/15"/><span className="h-2 w-2 rounded-full bg-white/15"/><span className="h-2 w-2 rounded-full bg-white/15"/></div>
                 <span className="ml-4 font-mono text-[9px] text-white/45">steerpast.com / security-overview</span>
@@ -149,33 +159,26 @@ export const Landing: React.FC = () => {
                 <div className="p-5 md:p-7">
                   <div className="flex items-start justify-between"><div><div className="text-[10px] text-white/45">Security overview</div><div className="mt-1 text-xl font-medium">Access posture</div></div><div className="rounded-full border border-[#b7ff49]/15 bg-[#b7ff49]/[0.05] px-2.5 py-1 text-[9px] text-[#b7ff49]/75">Monitoring active</div></div>
                   <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-                    <Metric label="Identities" value="10" delta="humans, services, agents"/>
-                    <Metric label="High-risk" value="3" delta="need attention" danger/>
+                    <Metric label="Identities" value={14} delta="humans, services, agents"/>
+                    <Metric label="Need action" value={3} delta="revoke or review" danger/>
                     <Metric label="Decision layer" value="Ready" delta="risk + policy + model"/>
                   </div>
                   <div className="mt-4 grid gap-3 lg:grid-cols-[1.2fr_.8fr]">
-                    <div className="rounded-xl border border-white/[0.07] p-4">
-                      <div className="flex justify-between text-[9px] uppercase tracking-[0.12em] text-white/45"><span>Decision activity</span><span>Live</span></div>
-                      {[['deployment-intern','production-db.admin','Revocation recommended','text-red-300'],['release-agent','payments.read','Allowed','text-[#b7ff49]'],['support-agent','customer.export','Step-up required','text-amber-300']].map(([a,b,c,cl])=><div key={a} className="mt-4 flex items-center justify-between border-t border-white/[0.05] pt-3"><div><div className="text-[11px] text-white/70">{a}</div><div className="mt-1 font-mono text-[9px] text-white/45">{b}</div></div><span className={`text-[9px] ${cl}`}>{c}</span></div>)}
-                    </div>
-                    <div className="rounded-xl border border-white/[0.07] p-4">
-                      <div className="text-[9px] uppercase tracking-[0.12em] text-white/45">Evaluation pipeline</div>
-                      <div className="mt-5 space-y-3">{[['IdentityAgent','context loaded'],['RiskAgent','risk scored'],['PolicyAgent','policy checked'],['DecisionAgent','decision ready']].map(([a,b],i)=><div key={a} className="flex items-center gap-3"><span className={`h-1.5 w-1.5 rounded-full ${i===3?'bg-[#b7ff49]':'bg-white/25'}`}/><span className="font-mono text-[9px] text-white/70">{a}</span><span className="ml-auto text-[8px] text-white/40">{b}</span></div>)}</div>
-                      <div className="mt-6 border-t border-white/[0.06] pt-4"><div className="text-[8px] uppercase tracking-[0.12em] text-white/40">Current decision</div><div className="mt-1 text-[11px] text-white/65">Recommend revocation</div></div>
-                    </div>
+                    <LiveActivity />
+                    <LivePipeline />
                   </div>
                 </div>
               </div>
-            </div>
+            </TiltIn>
           </div>
         </section>
 
         <section className="border-y border-white/[0.08]">
-          <div className="mx-auto grid max-w-[1160px] gap-px px-5 py-0 md:grid-cols-3 lg:px-8">
+          <Stagger className="mx-auto grid max-w-[1160px] gap-px px-5 py-0 md:grid-cols-3 lg:px-8">
             <Signal icon={<Eye/>} title="See" text="Know who has access, including autonomous agents and service identities."/>
             <Signal icon={<ScanSearch/>} title="Understand" text="Evaluate identity, risk, and policy together instead of reviewing disconnected alerts."/>
             <Signal icon={<Lock/>} title="Act" text="Move from detection to a defensible remediation decision with evidence."/>
-          </div>
+          </Stagger>
         </section>
 
         <section id="product" className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
@@ -193,8 +196,8 @@ export const Landing: React.FC = () => {
           <div className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
             <SectionIntro eyebrow="How it works" title="Set the context. Let the system follow the decision." text="Five focused steps connect an access event to an accountable outcome."/>
             <div className="relative mt-14 overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#101113] p-5 sm:p-7">
-              <div className="pointer-events-none absolute left-[9%] right-[9%] top-[72px] hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" />
-              <div className="grid gap-3 md:grid-cols-5">
+              <div className="pointer-events-none absolute left-[9%] right-[9%] top-[72px] hidden h-px overflow-hidden bg-gradient-to-r from-transparent via-white/15 to-transparent md:block"><motion.div className="h-px w-40 bg-gradient-to-r from-transparent via-[#b7ff49] to-transparent" animate={reduce ? undefined : { x: ["-10rem", "70rem"] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.6 }} /></div>
+              <Stagger className="grid gap-3 md:grid-cols-5" step={0.08}>
                 {[
                   ['01','Observe','IdentityAgent','Collect identity + entitlement context.',Eye],
                   ['02','Assess','RiskAgent','Score privilege, sensitivity + behavior.',ScanSearch],
@@ -202,14 +205,14 @@ export const Landing: React.FC = () => {
                   ['04','Decide','DecisionAgent','Produce an explainable outcome.',Sparkles],
                   ['05','Act','RemediationAgent','Recommend the safest next action.',GitBranch]
                 ].map(([n,t,a,d,Icon])=>{ const I=Icon as React.ElementType; return (
-                  <div key={n as string} className="relative rounded-xl border border-white/[0.07] bg-[#0b0c0d]/90 p-5 transition duration-200 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.04]">
+                  <StaggerItem key={n as string}><Spotlight className="h-full rounded-xl border border-white/[0.07] bg-[#0b0c0d]/90 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/15">
                     <div className="relative z-10 flex items-center justify-between"><span className="font-mono text-[11px] text-white/55">{n as string}</span><span className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.035] text-white/55"><I className="h-4 w-4"/></span></div>
                     <div className="mt-8 text-[14px] font-medium">{t as string}</div>
                     <div className="mt-2 font-mono text-[11px] text-white/55">{a as string}</div>
                     <p className="mt-4 text-[13px] leading-6 text-white/65">{d as string}</p>
-                  </div>
+                  </Spotlight></StaggerItem>
                 ); })}
-              </div>
+              </Stagger>
             </div>
           </div>
         </section>
@@ -224,7 +227,7 @@ export const Landing: React.FC = () => {
             </div>
             <div className="surface-lift overflow-hidden rounded-[22px] border">
               <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4"><span className="font-mono text-[9px] text-white/45">decision-trace / 14:32:08 UTC</span><span className="rounded-full border border-red-400/15 bg-red-400/[0.05] px-2 py-1 text-[8px] text-red-300">HIGH RISK</span></div>
-              <div className="px-5"><Trace icon={<Bot/>} label="Identity" value="deployment-intern" detail="Human identity · Engineering · Intern"/><Trace icon={<KeyRound/>} label="Access change" value="production-db.admin" detail="New privileged entitlement detected"/><Trace icon={<AlertTriangle/>} label="Risk" value="High · 92 / 100" detail="Production data + privilege escalation"/><Trace icon={<ShieldCheck/>} label="Policy" value="Conflict detected" detail="Intern role cannot hold production admin access"/><Trace icon={<Check/>} label="Decision" value="Recommend revocation" detail="Evidence retained for audit" last/></div>
+              <Stagger className="px-5" step={0.18} delay={0.2}><Trace icon={<Bot/>} label="Identity" value="Kabir · deployment intern" detail="Human identity · Engineering · Intern"/><Trace icon={<KeyRound/>} label="Access change" value="production-db.admin" detail="New privileged entitlement detected"/><Trace icon={<AlertTriangle/>} label="Risk" value="High · 67 / 100" detail="Production data + privilege escalation"/><Trace icon={<ShieldCheck/>} label="Policy" value="Conflict detected" detail="Intern role cannot hold production admin access"/><Trace icon={<Check/>} label="Decision" value="Recommend revocation" detail="Evidence retained for audit" last/></Stagger>
             </div>
           </div>
         </section>
@@ -337,7 +340,7 @@ export const Landing: React.FC = () => {
                 {name:'Pilot',price:'$29',sub:'per month · early access',items:['Everything in Free','Agent-aware identities','Remediation controls','Audit evidence'],featured:true,cta:'Start pilot'},
                 {name:'Growth',price:'$99',sub:'per month · growing teams',items:['Everything in Pilot','Advanced policy controls','Team workspaces','Priority support'],cta:'Talk to us'},
                 {name:'Enterprise',price:'Custom',sub:'deployment & governance',items:['Custom integrations','Security requirements','Deployment support','Volume & SLA planning'],cta:'Contact team'}
-              ].map(t=><div key={t.name} className={`relative flex min-h-[410px] flex-col rounded-[20px] border p-7 ${t.featured?'border-[#b7ff49]/35 bg-[#b7ff49]/[0.055] shadow-[0_0_70px_rgba(183,255,73,.07)]':'border-white/[0.08] bg-white/[0.018]'}`}>{t.featured&&<div className="absolute right-5 top-5 rounded-full bg-[#b7ff49] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#08090a]">Popular</div>}<div className="text-[13px] font-medium">{t.name}</div><div className="mt-7 font-serif text-4xl tracking-[-0.04em]">{t.price}</div><div className="mt-1 text-[11px] text-white/65">{t.sub}</div><ul className="mt-8 space-y-3">{t.items.map(x=><li key={x} className="flex gap-2 text-[12px] text-white/70"><Check className="mt-0.5 h-3.5 w-3.5 text-[#b7ff49]/65"/>{x}</li>)}</ul><Link to={t.name==='Free'?'/demo':'/company#contact'} onClick={t.name==='Free'?demo:undefined} className={`mt-auto inline-flex h-10 items-center justify-center rounded-full px-4 text-[12px] font-semibold transition hover:-translate-y-0.5 ${t.featured?'bg-[#b7ff49] text-[#08090a] hover:bg-[#d0ff88]':'border border-white/10 bg-white/[0.035] text-white/70 hover:border-white/20 hover:bg-white/[0.08] hover:text-white'}`}>{t.cta}</Link></div>)}
+              ].map((t,ti)=><Reveal key={t.name} delay={ti*0.07}><Spotlight className={`flex h-full min-h-[410px] flex-col rounded-[20px] border p-7 transition duration-300 hover:-translate-y-1 ${t.featured?'ring-spin border-[#b7ff49]/25 bg-[#b7ff49]/[0.055] shadow-[0_0_70px_rgba(183,255,73,.07)]':'border-white/[0.08] bg-white/[0.018]'}`}>{t.featured&&<div className="absolute right-5 top-5 rounded-full bg-[#b7ff49] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#08090a]">Popular</div>}<div className="text-[13px] font-medium">{t.name}</div><div className="mt-7 font-serif text-4xl tracking-[-0.04em]">{t.price}</div><div className="mt-1 text-[11px] text-white/65">{t.sub}</div><ul className="mt-8 space-y-3">{t.items.map(x=><li key={x} className="flex gap-2 text-[12px] text-white/70"><Check className="mt-0.5 h-3.5 w-3.5 text-[#b7ff49]/65"/>{x}</li>)}</ul><Link to={t.name==='Free'?'/demo':'/company#contact'} onClick={t.name==='Free'?demo:undefined} className={`mt-auto inline-flex h-10 items-center justify-center rounded-full px-4 text-[12px] font-semibold transition hover:-translate-y-0.5 ${t.featured?'bg-[#b7ff49] text-[#08090a] hover:bg-[#d0ff88]':'border border-white/10 bg-white/[0.035] text-white/70 hover:border-white/20 hover:bg-white/[0.08] hover:text-white'}`}>{t.cta}</Link></Spotlight></Reveal>)}
             </div>
           </div>
         </section>
@@ -372,7 +375,7 @@ export const Landing: React.FC = () => {
             <h2 className="mt-6 font-serif text-4xl font-medium tracking-[-0.045em] sm:text-6xl">Make every identity decision explainable.</h2>
             <p className="mx-auto mt-5 max-w-xl text-[14px] leading-7 text-white/55">Explore the live workspace and follow an identity from context to risk to an explainable action.</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/demo" onClick={demo} className="inline-flex h-11 items-center gap-2 rounded-full bg-[#b7ff49] px-5 text-[13px] font-semibold text-[#08090a] hover:bg-[#d0ff88]">View demo <ArrowRight className="h-4 w-4"/></Link>
+              <Magnetic><Link to="/demo" onClick={demo} className="group inline-flex h-11 items-center gap-2 rounded-full bg-[#b7ff49] px-5 text-[13px] font-semibold text-[#08090a] shadow-[0_8px_30px_rgba(183,255,73,.25)] hover:bg-[#d0ff88]">View demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/></Link></Magnetic>
               <a href={contactHref} className="inline-flex h-11 items-center rounded-full border border-white/10 px-5 text-[13px] text-white/55 hover:border-white/20 hover:text-white">Contact us</a>
             </div>
           </div>
@@ -394,21 +397,96 @@ export const Landing: React.FC = () => {
   );
 };
 
-function Metric({label,value,delta,danger=false}:{label:string;value:string;delta:string;danger?:boolean}) {
-  return <div className="min-w-0 rounded-xl border border-white/[0.07] bg-white/[0.015] p-3 sm:p-4"><div className="truncate text-[9px] uppercase tracking-[0.12em] text-white/45">{label}</div><div className={`mt-2 text-xl sm:text-2xl font-semibold tracking-[-0.035em] ${danger?'text-red-200':'text-white'}`}>{value}</div><div className={`mt-1 hidden text-[9px] sm:block ${danger?'text-red-300/60':'text-white/45'}`}>{delta}</div></div>;
+function Metric({label,value,delta,danger=false}:{label:string;value:string|number;delta:string;danger?:boolean}) {
+  return <div className="min-w-0 rounded-xl border border-white/[0.07] bg-white/[0.015] p-3 sm:p-4"><div className="truncate text-[9px] uppercase tracking-[0.12em] text-white/45">{label}</div><div className={`mt-2 text-xl sm:text-2xl font-semibold tracking-[-0.035em] tabular-nums ${danger?'text-red-200':'text-white'}`}><CountUp value={value}/></div><div className={`mt-1 hidden text-[9px] sm:block ${danger?'text-red-300/60':'text-white/45'}`}>{delta}</div></div>;
 }
 function Signal({icon,title,text}:{icon:React.ReactNode;title:string;text:string}) {
-  return <div className="flex gap-4 border-b border-white/[0.08] py-7 last:border-b-0 md:border-b-0 md:border-r md:px-6 md:py-9 md:first:pl-0 md:last:border-r-0 md:last:pr-0"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.02] text-white/65">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[14px] font-medium">{title}</div><p className="mt-1.5 text-[12px] leading-6 text-white/50">{text}</p></div></div>;
+  return <StaggerItem className="flex gap-4 border-b border-white/[0.08] py-7 last:border-b-0 md:border-b-0 md:border-r md:px-6 md:py-9 md:first:pl-0 md:last:border-r-0 md:last:pr-0"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.02] text-white/65">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[14px] font-medium">{title}</div><p className="mt-1.5 text-[12px] leading-6 text-white/50">{text}</p></div></StaggerItem>;
 }
 function SectionIntro({eyebrow,title,text}:{eyebrow:string;title:string;text:string}) {
-  return <div className="max-w-2xl"><div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">{eyebrow}</div><h2 className="mt-4 font-serif text-3xl font-medium leading-tight tracking-[-0.04em] sm:text-5xl">{title}</h2><p className="mt-5 text-[14px] leading-7 text-white/60">{text}</p></div>;
+  return <Reveal className="max-w-2xl"><div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">{eyebrow}</div><h2 className="mt-4 font-serif text-3xl font-medium leading-tight tracking-[-0.04em] sm:text-5xl">{title}</h2><p className="mt-5 text-[14px] leading-7 text-white/60">{text}</p></Reveal>;
 }
 function Feature({number,icon,title,text,items}:{number:string;icon:React.ReactNode;title:string;text:string;items:string[]}) {
-  return <div className="grid gap-8 py-12 md:grid-cols-[72px_1fr_1fr] md:items-start"><div className="font-mono text-[10px] text-white/40">{number}</div><div><div className="flex items-center gap-3">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4 text-white/65'})}<h3 className="text-[15px] font-medium">{title}</h3></div><p className="mt-4 max-w-lg text-[14px] leading-7 text-white/55">{text}</p></div><ul className="space-y-3 md:pt-1">{items.map(item=><li key={item} className="flex gap-3 text-[12px] text-white/60"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b7ff49]/55"/>{item}</li>)}</ul></div>;
+  return <Reveal className="grid gap-8 py-12 md:grid-cols-[72px_1fr_1fr] md:items-start"><div className="font-mono text-[10px] text-white/40">{number}</div><div><div className="flex items-center gap-3">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4 text-white/65'})}<h3 className="text-[15px] font-medium">{title}</h3></div><p className="mt-4 max-w-lg text-[14px] leading-7 text-white/55">{text}</p></div><ul className="space-y-3 md:pt-1">{items.map(item=><li key={item} className="flex gap-3 text-[12px] text-white/60"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b7ff49]/55"/>{item}</li>)}</ul></Reveal>;
 }
 function Trace({icon,label,value,detail,last=false}:{icon:React.ReactNode;label:string;value:string;detail:string;last?:boolean}) {
-  return <div className={`flex gap-4 py-4 ${last?'':'border-b border-white/[0.06]'}`}><div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/10 bg-[#101113] text-white/60">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[9px] uppercase tracking-[0.12em] text-white/40">{label}</div><div className="mt-1 text-[12px] font-medium text-white/70">{value}</div><div className="mt-1 text-[10px] leading-5 text-white/50">{detail}</div></div></div>;
+  return <motion.div variants={rise} className={`flex gap-4 py-4 ${last?'':'border-b border-white/[0.06]'}`}><div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/10 bg-[#101113] text-white/60">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[9px] uppercase tracking-[0.12em] text-white/40">{label}</div><div className="mt-1 text-[12px] font-medium text-white/70">{value}</div><div className="mt-1 text-[10px] leading-5 text-white/50">{detail}</div></div></motion.div>;
 }
 function Reason({title,text}:{title:string;text:string}) {
   return <div className="border-t border-white/[0.1] pt-5"><h3 className="text-[14px] font-medium">{title}</h3><p className="mt-2 text-[14px] leading-7 text-white/55">{text}</p></div>;
+}
+
+
+const feed = [
+  { who: 'deployment-intern', what: 'production-db.admin', verdict: 'Revoke recommended', cls: 'text-red-300', dot: 'bg-red-400' },
+  { who: 'release-agent', what: 'ci-cd.deploy', verdict: 'Owner review', cls: 'text-amber-300', dot: 'bg-amber-300' },
+  { who: 'support-agent', what: 'support-portal.read', verdict: 'Approved', cls: 'text-[#b7ff49]', dot: 'bg-[#b7ff49]' },
+  { who: 'finance-contractor', what: 'payments.approve', verdict: 'SoD conflict', cls: 'text-red-300', dot: 'bg-red-400' },
+  { who: 'data-pipeline', what: 'warehouse.read', verdict: 'Approved', cls: 'text-[#b7ff49]', dot: 'bg-[#b7ff49]' },
+];
+
+function useTicker(length: number, ms: number) {
+  const reduce = useReducedMotion();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (reduce) return;
+    const t = setInterval(() => setI(x => (x + 1) % length), ms);
+    return () => clearInterval(t);
+  }, [length, ms, reduce]);
+  return i;
+}
+
+function LiveActivity() {
+  const tick = useTicker(feed.length, 2600);
+  const rows = [0, 1, 2].map(k => feed[(tick + k) % feed.length]);
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/[0.07] p-4">
+      <div className="flex justify-between text-[9px] uppercase tracking-[0.12em] text-white/45"><span>Decision activity</span><span className="flex items-center gap-1.5 text-[#b7ff49]/80"><span className="ping-dot h-1.5 w-1.5 rounded-full bg-[#b7ff49] text-[#b7ff49]"/>Live</span></div>
+      <div className="relative">
+        <AnimatePresence initial={false} mode="popLayout">
+          {rows.map(r => (
+            <motion.div
+              key={r.who}
+              layout
+              initial={{ opacity: 0, y: -14, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: 14, filter: 'blur(4px)' }}
+              transition={{ duration: 0.5, ease: EASE_OUT }}
+              className="mt-4 flex items-center justify-between border-t border-white/[0.05] pt-3"
+            >
+              <div><div className="text-[11px] text-white/75">{r.who}</div><div className="mt-1 font-mono text-[9px] text-white/45">{r.what}</div></div>
+              <span className={`flex items-center gap-1.5 text-[9px] ${r.cls}`}><span className={`h-1 w-1 rounded-full ${r.dot}`}/>{r.verdict}</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+const pipeline = [['IdentityAgent','context loaded'],['RiskAgent','risk scored'],['PolicyAgent','policy checked'],['DecisionAgent','decision ready']];
+
+function LivePipeline() {
+  const step = useTicker(pipeline.length + 2, 900);
+  const reduce = useReducedMotion();
+  const done = reduce ? pipeline.length : Math.min(step, pipeline.length);
+  return (
+    <div className="rounded-xl border border-white/[0.07] p-4">
+      <div className="text-[9px] uppercase tracking-[0.12em] text-white/45">Evaluation pipeline</div>
+      <div className="mt-5 space-y-3">
+        {pipeline.map(([a,b],i) => {
+          const state = i < done ? 'done' : i === done ? 'active' : 'idle';
+          return (
+            <div key={a} className="flex items-center gap-3">
+              <span className={`relative h-1.5 w-1.5 rounded-full transition-colors duration-300 ${state==='done' ? 'bg-[#b7ff49]' : state==='active' ? 'ping-dot bg-white/70 text-white/70' : 'bg-white/20'}`}/>
+              <span className={`font-mono text-[9px] transition-colors duration-300 ${state==='idle' ? 'text-white/40' : 'text-white/80'}`}>{a}</span>
+              <span className="ml-auto text-[8px] text-white/45">{state==='done' ? b : state==='active' ? 'running…' : 'queued'}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-5 h-1 overflow-hidden rounded-full bg-white/[0.06]"><motion.div className="h-full rounded-full bg-[#b7ff49]" animate={{ width: `${(done / pipeline.length) * 100}%` }} transition={{ duration: 0.5, ease: EASE_OUT }} /></div>
+      <div className="mt-4 border-t border-white/[0.06] pt-4"><div className="text-[8px] uppercase tracking-[0.12em] text-white/40">Current decision</div><div className="mt-1 text-[11px] text-white/75">{done >= pipeline.length ? 'Recommend revocation' : 'Evaluating…'}</div></div>
+    </div>
+  );
 }

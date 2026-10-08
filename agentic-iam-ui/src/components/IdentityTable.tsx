@@ -1,7 +1,7 @@
 import React from 'react';
 import { IdentityViewModel, Role } from '../services/iamApi';
 import { RiskBadge } from './RiskBadge';
-import { ChevronRight, Users } from 'lucide-react';
+import { Bot, ChevronRight, Users } from 'lucide-react';
 import { Avatar, EmptyState, OutcomeBadge, Skeleton, riskTier } from './ui';
 
 export const IdentityTable: React.FC<{
@@ -44,7 +44,7 @@ export const IdentityTable: React.FC<{
               <button type="button" onClick={() => onSelect(vm.identity.id)} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition ${active ? 'bg-white/[0.05]' : 'active:bg-white/[0.04]'}`}>
                 <Avatar name={vm.identity.name} tier={riskTier(vm.risk.riskScore, vm.anomaly)} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-medium text-white">{vm.identity.name}</span>
+                  <span className="flex items-center gap-1.5 truncate text-[14px] font-medium text-white">{vm.identity.name}{vm.identity.attributes.identityType === 'AI_AGENT' && <Bot className="h-3.5 w-3.5 text-[#b7ff49]" aria-label="AI agent" />}</span>
                   <span className="block truncate text-[12px] text-white/50">{vm.identity.attributes.title} · {vm.identity.attributes.department}</span>
                 </span>
                 <RiskBadge score={vm.risk.riskScore} anomaly={vm.anomaly} />
@@ -85,7 +85,7 @@ export const IdentityTable: React.FC<{
                     <div className="flex items-center gap-3">
                       <Avatar name={vm.identity.name} tier={riskTier(vm.risk.riskScore, vm.anomaly)} />
                       <div className="min-w-0">
-                        <div className="text-[14px] font-medium text-white">{vm.identity.name}</div>
+                        <div className="flex items-center gap-2 text-[14px] font-medium text-white">{vm.identity.name}{vm.identity.attributes.identityType === 'AI_AGENT' && <span className="inline-flex items-center gap-1 rounded-full border border-[#b7ff49]/25 bg-[#b7ff49]/[0.06] px-1.5 py-px text-[10px] font-medium text-[#d0ff88]"><Bot className="h-3 w-3" aria-hidden="true" />Agent</span>}</div>
                         <div className="mt-0.5 text-[12px] text-white/50">{vm.identity.attributes.title}</div>
                       </div>
                     </div>

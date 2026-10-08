@@ -2,12 +2,29 @@ import { seedRoles, seedEntitlements, seedIdentities } from '../seed';
 import express from 'express';
 import { IAMOrchestrator } from '../orchestrator/IAMController';
 
+const SENIORITY = ['INTERN', 'JUNIOR', 'MID', 'SENIOR', 'EXECUTIVE'];
+const EMPLOYMENT = ['FULL_TIME', 'CONTRACTOR', 'INTERN', 'AUTOMATION'];
+const IDENTITY_TYPES = ['HUMAN', 'SERVICE', 'AI_AGENT'];
+
+function validateNewIdentity(body: any): string | null {
+  if (!body || typeof body !== 'object') return 'Body must be a JSON object';
+  if (typeof body.name !== 'string' || !body.name.trim()) return 'name is required';
+  const a = body.attributes;
+  if (!a || typeof a !== 'object') return 'attributes are required';
+  for (const f of ['department', 'title', 'location']) {
+    if (typeof a[f] !== 'string' || !a[f].trim()) return `attributes.${f} is required`;
+  }
+  if (!SENIORITY.includes(a.seniority)) return `attributes.seniority must be one of ${SENIORITY.join(', ')}`;
+  if (!EMPLOYMENT.includes(a.employmentType)) return `attributes.employmentType must be one of ${EMPLOYMENT.join(', ')}`;
+  if (a.identityType !== undefined && !IDENTITY_TYPES.includes(a.identityType)) return `attributes.identityType must be one of ${IDENTITY_TYPES.join(', ')}`;
+  return null;
+}
+
 export function createRouter(orchestrator: IAMOrchestrator) {
   const router = express.Router();
   // Delete an identity
   router.delete('/identities/:id', async (req, res) => {
     const id = req.params.id;
-    console.log('DELETE /identities/:id called. Params:', req.params);
     const deleted = orchestrator.removeIdentity(id);
     if (!deleted) {
       res.status(404).json({ error: 'Identity not found' });
@@ -23,9 +40,27 @@ export function createRouter(orchestrator: IAMOrchestrator) {
 
   // Add new identity
   router.post('/identities', async (req, res) => {
-    console.log('POST /identities called. Body:', req.body);
+    const problem = validateNewIdentity(req.body);
+    if (problem) {
+      res.status(400).json({ error: problem });
+      return;
+    }
     try {
-      const identity = await orchestrator.createIdentity(req.body);
+      const b = req.body;
+      const identity = await orchestrator.createIdentity({
+        name: String(b.name).trim().slice(0, 80),
+        attributes: {
+          department: String(b.attributes.department).trim().slice(0, 60),
+          title: String(b.attributes.title).trim().slice(0, 80),
+          seniority: b.attributes.seniority,
+          employmentType: b.attributes.employmentType,
+          location: String(b.attributes.location).trim().slice(0, 60),
+          identityType: b.attributes.identityType,
+          owner: b.attributes.owner ? String(b.attributes.owner).slice(0, 80) : undefined,
+        },
+        roles: [],
+        entitlements: [],
+      });
       res.status(201).json(identity);
     } catch (err) {
       console.error(err);
@@ -35,10 +70,9 @@ export function createRouter(orchestrator: IAMOrchestrator) {
 
   // Assign a role to an identity
   router.post('/identities/:id/roles', async (req, res) => {
-    console.log('POST /identities/:id/roles called. Params:', req.params, 'Body:', req.body);
-    const { roleId } = req.body;
-    if (!roleId) {
-      res.status(400).json({ error: 'roleId is required' });
+    const { roleId } = req.body ?? {};
+    if (!roleId || typeof roleId !== 'string' || !roles.some((r) => r.id === roleId)) {
+      res.status(400).json({ error: 'A valid roleId is required' });
       return;
     }
     try {
@@ -198,6 +232,17 @@ export function createRouter(orchestrator: IAMOrchestrator) {
       console.error(err);
       res.status(500).json({ error: 'Failed to apply remediation' });
     }
+  });
+
+  // Liveness + configuration (never exposes secrets).
+  router.get('/health', async (_req, res) => {
+    res.json({ ok: true, ...(await orchestrator.getAgentHealth()) });
+  });
+
+  // Restore the seeded demo dataset.
+  router.post('/reset', (_req, res) => {
+    orchestrator.reset();
+    res.json({ ok: true });
   });
 
   // Metrics & audit.

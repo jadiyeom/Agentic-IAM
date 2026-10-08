@@ -3,8 +3,17 @@ import { fetchIdentities, IdentityViewModel, createIdentity, fetchRoles, Role } 
 import { IdentityTable } from '../components/IdentityTable';
 import { IdentityInspector } from '../components/IdentityInspector';
 import { RiskLegend } from '../components/RiskLegend';
-import { PageHeader, StatCard } from '../components/ui';
+import { PageHeader, StatCard, riskTier } from '../components/ui';
+import { useSearchParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, MousePointerClick, Plus, Scale, Search, ShieldAlert, Users, X } from 'lucide-react';
+
+const useFocusParam = () => {
+  const [params, setParams] = useSearchParams();
+  const focus = params.get('focus');
+  const clear = () => { params.delete('focus'); setParams(params, { replace: true }); };
+  return [focus, clear] as const;
+};
 
 const useIsWide = () => {
   const query = '(min-width: 1280px)';
@@ -20,6 +29,7 @@ const useIsWide = () => {
 
 export const Identities: React.FC = () => {
   const isWide = useIsWide();
+  const [focus, clearFocus] = useFocusParam();
   const [identities, setIdentities] = useState<IdentityViewModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -48,6 +58,13 @@ export const Identities: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!focus || !identities.some(x => x.identity.id === focus)) return;
+    setSelectedId(focus);
+    setDrawerOpen(true);
+    clearFocus();
+  }, [focus, identities]);
+
+  useEffect(() => {
     if (!drawerOpen || isWide) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawerOpen(false); };
     window.addEventListener('keydown', onKey);
@@ -59,15 +76,15 @@ export const Identities: React.FC = () => {
     const query = search.trim().toLowerCase();
     if (query && !vm.identity.name.toLowerCase().includes(query) && !vm.identity.attributes.title.toLowerCase().includes(query)) return false;
     if (department && vm.identity.attributes.department !== department) return false;
-    if (riskLevel === 'low' && vm.risk.riskScore > 5) return false;
-    if (riskLevel === 'medium' && (vm.risk.riskScore < 6 || vm.risk.riskScore > 12)) return false;
-    if (riskLevel === 'high' && vm.risk.riskScore < 13 && !vm.anomaly) return false;
+    const tier = riskTier(vm.risk.riskScore, vm.anomaly);
+    if (riskLevel && tier !== riskLevel) return false;
     return true;
   }).sort((a, b) => b.risk.riskScore - a.risk.riskScore), [identities, search, department, riskLevel]);
 
-  const highRisk = identities.filter(x => x.risk.riskScore >= 13 || x.anomaly).length;
+  const highRisk = identities.filter(x => riskTier(x.risk.riskScore, x.anomaly) === 'high').length;
   const violations = identities.reduce((n, x) => n + x.policy.violations.length, 0);
   const approved = identities.filter(x => String(x.decision.outcome).toUpperCase() === 'APPROVE').length;
+  const needsAction = identities.length - approved;
   const selected = identities.find(x => x.identity.id === selectedId);
   const filtersActive = Boolean(search || department || riskLevel);
 
@@ -130,9 +147,9 @@ export const Identities: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3 py-6 lg:grid-cols-4">
           <StatCard label="Identities" value={loading ? '–' : identities.length} detail="Evaluated by the pipeline" icon={<Users />} />
-          <StatCard label="High risk" value={loading ? '–' : highRisk} detail="Score 13+ or anomalous" icon={<ShieldAlert />} tone={highRisk ? 'danger' : 'default'} />
+          <StatCard label="High risk" value={loading ? '–' : highRisk} detail="Score 50+ or policy breach" icon={<ShieldAlert />} tone={highRisk ? 'danger' : 'default'} />
           <StatCard label="Policy violations" value={loading ? '–' : violations} detail="Across all identities" icon={<Scale />} />
-          <StatCard label="Approved" value={loading ? '–' : approved} detail="Current decisions" icon={<CheckCircle2 />} tone="lime" />
+          <StatCard label="Needs action" value={loading ? '–' : needsAction} detail={loading ? 'Current decisions' : `${approved} approved as-is`} icon={<CheckCircle2 />} tone={needsAction ? 'lime' : 'default'} />
         </div>
 
         <div className="flex flex-col gap-3 pb-5 lg:flex-row lg:items-center">
@@ -172,7 +189,11 @@ export const Identities: React.FC = () => {
 
           {isWide && (
             <aside aria-label="Identity inspector" className="scroll-quiet sticky top-6 max-h-[calc(100vh-48px)] overflow-y-auto rounded-2xl border border-white/[0.08] bg-[#0d0e10]">
-              {inspector ?? <div className="p-8 text-center text-[13px] text-white/50">Select an identity to inspect it.</div>}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div key={selectedId ?? 'none'} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
+                  {inspector ?? <div className="p-8 text-center text-[13px] text-white/50">Select an identity to inspect it.</div>}
+                </motion.div>
+              </AnimatePresence>
             </aside>
           )}
         </div>

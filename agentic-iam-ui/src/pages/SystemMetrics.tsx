@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Activity, Clock, Cpu, Gauge, ListChecks, ShieldAlert, Timer, Undo2 } from 'lucide-react';
 import { fetchAgentHealth, fetchAuditTimeline, fetchDecisionVolume, fetchMetrics, fetchRiskDistribution, Metrics } from '../services/iamApi';
 import { Card, CardHeader, PageHeader, Skeleton, StatCard } from '../components/ui';
 
-type Health = { status: string; lastRun: string; policiesLoaded: number; latency: number };
+type Health = { status: string; lastRun: string; policiesLoaded: number; latency: number; decisionProvider?: string; model?: string | null };
 type Dist = { low: number; medium: number; high: number };
 
 const agents = ['IdentityAgent', 'RiskAgent', 'PolicyAgent', 'DecisionAgent', 'RemediationAgent', 'AuditAgent'];
@@ -13,7 +13,7 @@ export const SystemMetrics: React.FC = () => {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [dist, setDist] = useState<Dist | null>(null);
-  const [volume, setVolume] = useState<{ day: string; count: number }[]>([]);
+  const [volume, setVolume] = useState<{ day: string; count: number; outcome?: string }[]>([]);
   const [timeline, setTimeline] = useState<{ time: string; label: string }[]>([]);
 
   useEffect(() => {
@@ -24,6 +24,7 @@ export const SystemMetrics: React.FC = () => {
     fetchAuditTimeline().then(setTimeline).catch(() => undefined);
   }, []);
 
+  const COLORS: Record<string, string> = { APPROVE: '#34d399', FLAG_FOR_REVIEW: '#fcd34d', RECOMMEND_REVOCATION: '#f87171', AUTO_REMEDIATE: '#b7ff49' };
   const mean = metrics && metrics.totalDecisions > 0 ? (metrics.cumulativeDecisionTimeMs / metrics.totalDecisions) : 0;
   const total = dist ? dist.low + dist.medium + dist.high : 0;
   const active = (health?.status ?? '').toLowerCase() === 'active';
@@ -54,15 +55,17 @@ export const SystemMetrics: React.FC = () => {
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="grid min-w-0 gap-4">
             <Card>
-              <CardHeader icon={<Gauge className="h-4 w-4" />} title="Decision volume" subtitle="Decisions per weekday (sample series)" />
+              <CardHeader icon={<Gauge className="h-4 w-4" />} title="Decision mix" subtitle="Latest decision for every identity" />
               <div className="h-[260px] px-3 pb-4 pt-5">
                 {volume.length ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={volume} margin={{ top: 4, right: 12, left: -12, bottom: 0 }}>
                       <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: 'rgba(255,255,255,.5)', fontSize: 11 }} />
-                      <YAxis tickLine={false} axisLine={false} tick={{ fill: 'rgba(255,255,255,.4)', fontSize: 11 }} width={44} />
+                      <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: 'rgba(255,255,255,.4)', fontSize: 11 }} width={44} />
                       <Tooltip cursor={{ fill: 'rgba(255,255,255,.04)' }} contentStyle={{ background: '#111216', border: '1px solid rgba(255,255,255,.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} labelStyle={{ color: 'rgba(255,255,255,.6)' }} />
-                      <Bar dataKey="count" name="Decisions" fill="#b7ff49" fillOpacity={0.85} radius={[6, 6, 0, 0]} maxBarSize={46} />
+                      <Bar dataKey="count" name="Identities" radius={[6, 6, 0, 0]} maxBarSize={56} isAnimationActive animationDuration={700}>
+                        {volume.map(v => <Cell key={v.day} fill={COLORS[v.outcome ?? ''] ?? '#b7ff49'} fillOpacity={0.85} />)}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 ) : <Skeleton className="h-full" />}
@@ -96,7 +99,7 @@ export const SystemMetrics: React.FC = () => {
 
           <div className="grid gap-4">
             <Card>
-              <CardHeader icon={<Cpu className="h-4 w-4" />} title="Agents" subtitle={health ? `${health.policiesLoaded} policies loaded · ${health.latency} ms latency` : 'Loading…'} />
+              <CardHeader icon={<Cpu className="h-4 w-4" />} title="Agents" subtitle={health ? `${health.policiesLoaded} policies · decisions by ${health.decisionProvider === 'claude' ? `Claude (${health.model})` : 'deterministic engine'}` : 'Loading…'} />
               <ul className="divide-y divide-white/[0.06]">
                 {agents.map(a => (
                   <li key={a} className="flex items-center justify-between px-5 py-3">
@@ -116,7 +119,7 @@ export const SystemMetrics: React.FC = () => {
                     <span className={`relative mt-1.5 h-[11px] w-[11px] shrink-0 rounded-full border-2 ${i === timeline.length - 1 ? 'border-[#b7ff49] bg-[#b7ff49]/30' : 'border-white/25 bg-[#0d0e10]'}`} aria-hidden="true" />
                     <div className="flex flex-1 items-baseline justify-between gap-3">
                       <span className="text-[13px] text-white/80">{t.label}</span>
-                      <span className="font-mono text-[11px] text-white/45">{t.time}</span>
+                      <span className="font-mono text-[11px] text-white/45">{/^\d{4}-/.test(t.time) ? new Date(t.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : t.time}</span>
                     </div>
                   </li>
                 )) : <Skeleton className="h-28" />}

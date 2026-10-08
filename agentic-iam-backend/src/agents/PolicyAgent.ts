@@ -24,7 +24,7 @@ export class PolicyComplianceAgent {
           violations.push(...this.evaluateLeastPrivilege(identity, state, policy));
           break;
         case 'SOD':
-          violations.push(...this.evaluateSoD(identity, policy));
+          violations.push(...this.evaluateSoD(identity, policy, state));
           break;
         case 'ROLE_ELIGIBILITY':
           violations.push(...this.evaluateRoleEligibility(identity, state, policy));
@@ -89,7 +89,7 @@ export class PolicyComplianceAgent {
     return [];
   }
 
-  private evaluateSoD(identity: Identity, policy: Policy): PolicyViolation[] {
+  private evaluateSoD(identity: Identity, policy: Policy, state?: IdentityMonitoringState): PolicyViolation[] {
     const conflicts = (policy.config.conflictingRoles as string[][]) || [];
     const violations: PolicyViolation[] = [];
     for (const pair of conflicts) {
@@ -99,7 +99,7 @@ export class PolicyComplianceAgent {
           id: `${policy.id}-sod-${identity.id}-${a}-${b}`,
           policyId: policy.id,
           policyType: 'SOD',
-          description: 'Identity holds a conflicting combination of roles violating Segregation of Duties.',
+          description: `${identity.name} holds both ${a.replace('role-', '').replace(/-/g, ' ')} and ${b.replace('role-', '').replace(/-/g, ' ')}, so one person can initiate and approve the same transaction.`,
           severity: 'CRITICAL',
           details: { roles: [a, b] },
         });
@@ -169,9 +169,7 @@ export class PolicyComplianceAgent {
           id: `${policy.id}-elig-${identity.id}-${rule.roleId}`,
           policyId: policy.id,
           policyType: 'ROLE_ELIGIBILITY',
-          description: `Identity does not meet eligibility requirements for role ${rule.roleId}: ${issues.join(
-            '; '
-          )}`,
+          description: `${identity.name} is not eligible for ${role?.name ?? rule.roleId}: ${issues.join('; ')}.`,
           severity: role?.sensitivity === 'CRITICAL' ? 'CRITICAL' : 'HIGH',
           details: {
             roleId: rule.roleId,

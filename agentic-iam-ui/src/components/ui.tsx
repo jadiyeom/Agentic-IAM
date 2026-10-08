@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2, ClipboardList, ShieldOff, Zap } from 'lucide-react';
 import type { DecisionOutcome } from '../services/iamApi';
+import { CountUp } from './motion';
 
 /* ------------------------------------------------------------------ */
 /* Shared workspace primitives. One visual language for every screen. */
@@ -8,9 +9,12 @@ import type { DecisionOutcome } from '../services/iamApi';
 
 export type RiskTier = 'low' | 'medium' | 'high';
 
+/** Mirrors agentic-iam-backend/src/riskTiers.ts (0–100 composite score). */
+export const RISK_TIERS = { high: 50, medium: 25 } as const;
+
 export function riskTier(score: number, anomaly = false): RiskTier {
-  if (anomaly || score >= 13) return 'high';
-  if (score >= 6) return 'medium';
+  if (anomaly || score >= RISK_TIERS.high) return 'high';
+  if (score >= RISK_TIERS.medium) return 'medium';
   return 'low';
 }
 
@@ -93,12 +97,13 @@ export const StatCard: React.FC<{ label: string; value: React.ReactNode; detail?
   const valueCls = tone === 'danger' ? 'text-red-200' : tone === 'lime' ? 'text-[#d0ff88]' : 'text-white';
   const iconCls = tone === 'danger' ? 'text-red-300/80' : tone === 'lime' ? 'text-[#b7ff49]/80' : 'text-white/45';
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#0d0e10] p-5 transition duration-200 hover:border-white/[0.14]">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d0e10] p-5 transition duration-300 hover:-translate-y-0.5 hover:border-white/[0.16]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12px] text-white/55">{label}</span>
         {icon && <span className={iconCls}>{React.cloneElement(icon as React.ReactElement, { className: 'h-4 w-4', 'aria-hidden': true })}</span>}
       </div>
-      <div className={`mt-3 text-[28px] font-semibold leading-none tracking-[-0.035em] tabular-nums ${valueCls}`}>{value}</div>
+      <div className={`mt-3 text-[28px] font-semibold leading-none tracking-[-0.035em] tabular-nums ${valueCls}`}><CountUp value={value} /></div>
       {detail && <div className="mt-2 text-[11px] text-white/45">{detail}</div>}
     </div>
   );

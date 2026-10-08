@@ -11,7 +11,9 @@ import { DemoIntro } from './pages/DemoIntro';
 import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
 import Entitlements from './pages/Entitlements';
-import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut } from 'lucide-react';
+import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Search } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { CommandPalette, openCommandPalette } from './components/CommandPalette';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -44,7 +46,15 @@ const DemoNav: React.FC = () => {
         </Link>
       </div>
 
-      <nav aria-label="Workspace" className="px-3 pt-6">
+      <div className="px-3 pt-4">
+        <button type="button" onClick={openCommandPalette} className="group flex h-9 w-full items-center gap-2.5 rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 text-[12px] text-white/50 transition hover:border-white/15 hover:text-white/80">
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
+          Search
+          <kbd className="ml-auto rounded border border-white/10 px-1.5 font-mono text-[10px] text-white/45">⌘K</kbd>
+        </button>
+      </div>
+
+      <nav aria-label="Workspace" className="px-3 pt-5">
         <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Workspace</div>
         {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
@@ -88,9 +98,12 @@ const MobileBar: React.FC = () => (
         <img src="/steerpast-logo.png" alt="" aria-hidden="true" className="h-7 w-7 rounded-[9px] object-cover" />
         Steerpast <span className="font-normal text-white/45">IAM</span>
       </Link>
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/60">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#b7ff49]" />Demo
-      </span>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={openCommandPalette} aria-label="Search" className="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-white/60"><Search className="h-3.5 w-3.5" /></button>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/60">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#b7ff49]" />Demo
+        </span>
+      </div>
     </div>
     <nav aria-label="Workspace" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/[0.08] bg-[#08090b]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
       {navItems.map(({ to, short, icon: Icon }) => (
@@ -105,6 +118,7 @@ const MobileBar: React.FC = () => (
 
 const DemoShell: React.FC = () => {
   const location = useLocation();
+  const reduce = useReducedMotion();
   const current = navItems.find(n => n.to === location.pathname);
 
   return (
@@ -112,19 +126,28 @@ const DemoShell: React.FC = () => {
       <a href="#workspace-main" className="skip-link">Skip to content</a>
       <DemoNav />
       <MobileBar />
+      <CommandPalette />
       <main id="workspace-main" className="min-h-screen pb-20 lg:pb-0 lg:pl-[248px]">
         <div className="hidden border-b border-white/[0.07] bg-[#08090b]/95 px-8 py-3 backdrop-blur lg:block">
           <div className="mx-auto flex max-w-[1480px] items-center justify-between">
             <div className="flex items-center gap-2 text-[12px] text-white/50">
               <span>Workspace</span><span className="text-white/25">/</span><span className="text-white/80">{current?.label ?? 'Overview'}</span>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-white/50">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_9px_rgba(52,211,153,.7)]" />
-              Agents online · synthetic data
+            <div className="flex items-center gap-4 text-[11px] text-white/50">
+              <span className="flex items-center gap-2"><span className="ping-dot h-1.5 w-1.5 rounded-full bg-emerald-400 text-emerald-400" />Agents online · synthetic data</span>
+              <button type="button" onClick={openCommandPalette} className="flex items-center gap-2 rounded-md border border-white/10 px-2 py-1 text-white/55 transition hover:border-white/20 hover:text-white"><Search className="h-3 w-3" aria-hidden="true" />Jump to<kbd className="font-mono text-[10px] text-white/40">⌘K</kbd></button>
             </div>
           </div>
         </div>
-        <Routes>
+        <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location.pathname}
+          initial={reduce ? false : { opacity: 0, y: 8, filter: 'blur(4px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          exit={reduce ? undefined : { opacity: 0, y: -4, filter: 'blur(2px)' }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        >
+        <Routes location={location}>
           <Route path="/identities" element={<Identities />} />
           <Route path="/entitlements" element={<Entitlements />} />
           <Route path="/explain-audit" element={<ExplainAudit />} />
@@ -132,6 +155,8 @@ const DemoShell: React.FC = () => {
           <Route path="/dashboard" element={<Navigate to="/identities" replace />} />
           <Route path="*" element={<Navigate to="/identities" replace />} />
         </Routes>
+        </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

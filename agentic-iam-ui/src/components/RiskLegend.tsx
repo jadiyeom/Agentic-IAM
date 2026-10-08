@@ -5,9 +5,9 @@ interface RiskLegendProps {
 }
 
 const items = [
-  ['bg-emerald-400', 'Low', '0–5'],
-  ['bg-amber-300', 'Medium', '6–12'],
-  ['bg-red-400', 'High', '13+'],
+  ['bg-emerald-400', 'Low', '0–24'],
+  ['bg-amber-300', 'Medium', '25–49'],
+  ['bg-red-400', 'High', '50+'],
 ];
 
 export const RiskLegend: React.FC<RiskLegendProps> = ({ className = '' }) => (

@@ -3,7 +3,6 @@ import { RiskEvaluationResult } from './RiskAgent';
 import { PolicyEvaluationResult } from './PolicyAgent';
 import { Identity } from '../models/Identity';
 import { huggingfaceConfig } from '../huggingfaceConfig';
-import fetch from 'node-fetch';
 
 export interface AuditRecord {
   id: string;
@@ -45,6 +44,8 @@ export class AuditExplainabilityAgent {
       explanation,
     };
     this.records.push(record);
+    // Bounded in-memory log: a long-running instance must not grow without limit.
+    if (this.records.length > 1000) this.records.splice(0, this.records.length - 1000);
     return record;
   }
 
