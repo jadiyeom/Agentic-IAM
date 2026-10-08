@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTriangle, Check, ChevronRight, Database, KeyRound, Sparkles, Fingerprint, Network, ScanSearch, Plus, Cpu, ServerCog, ArrowUpRight } from 'lucide-react';
 
 const demo = () => localStorage.setItem('steerpast-iam-auth','true');
-const contactHref = 'mailto:' + ['omjadiye','steerpast.com'].join('@');
 
 const SteerpastMark = ({className='h-7 w-7'}:{className?:string}) => (
   <img src="/steerpast-logo.png" alt="" aria-hidden="true" className={`shrink-0 rounded-[9px] object-cover ${className}`} />
