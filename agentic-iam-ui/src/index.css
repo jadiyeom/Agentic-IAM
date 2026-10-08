@@ -6,47 +6,30 @@ html { scroll-behavior: smooth; }
 body {
   @apply bg-surface text-slate-100;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  text-rendering: optimizeLegibility;
 }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 1px solid rgba(255,255,255,.55); outline-offset: 2px; }
 
-@keyframes steerpast-fade-up {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes steerpast-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-@keyframes steerpast-rise {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes steerpast-modal {
-  from { opacity: 0; transform: translateY(10px) scale(.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
+@keyframes steerpast-fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes steerpast-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes steerpast-modal { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes steerpast-pulse { 0%,100% { opacity:.55; } 50% { opacity:1; } }
 
-.landing-page main > section {
-  animation: steerpast-fade-up .7s cubic-bezier(.22,1,.36,1) both;
-}
-.landing-page main > section:nth-child(2) { animation-delay: .06s; }
-.landing-page main > section:nth-child(3) { animation-delay: .12s; }
-.landing-page main > section:nth-child(4) { animation-delay: .18s; }
-.landing-page main > section:nth-child(5) { animation-delay: .24s; }
-.landing-page main > section:nth-child(6) { animation-delay: .30s; }
-.landing-page main > section:nth-child(7) { animation-delay: .36s; }
-.landing-page main > section:nth-child(8) { animation-delay: .42s; }
-.landing-page a,
-.landing-page button { transition: all .2s ease; }
-.landing-page .product-preview { animation: steerpast-float 6s ease-in-out infinite; }
-.landing-page .product-preview:hover { box-shadow: 0 40px 120px rgba(0,0,0,.58); }
-
-.animate-rise { animation: steerpast-rise .55s cubic-bezier(.22,1,.36,1) both; }
-.animate-modal { animation: steerpast-modal .24s cubic-bezier(.22,1,.36,1) both; }
+.landing-page main > section { animation: steerpast-fade-up .65s cubic-bezier(.22,1,.36,1) both; }
+.landing-page main > section:nth-child(2) { animation-delay:.05s }
+.landing-page main > section:nth-child(3) { animation-delay:.1s }
+.landing-page main > section:nth-child(4) { animation-delay:.15s }
+.landing-page main > section:nth-child(5) { animation-delay:.2s }
+.landing-page main > section:nth-child(6) { animation-delay:.25s }
+.landing-page main > section:nth-child(7) { animation-delay:.3s }
+.landing-page a, .landing-page button { transition: color .18s ease, background-color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+.landing-page .product-preview { box-shadow: 0 36px 110px rgba(0,0,0,.48); }
+.animate-rise { animation: steerpast-rise .45s cubic-bezier(.22,1,.36,1) both; }
+.animate-modal { animation: steerpast-modal .2s cubic-bezier(.22,1,.36,1) both; }
+.steerpast-pulse { animation: steerpast-pulse 2.2s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .landing-page main > section,
-  .landing-page .product-preview,
-  .animate-rise,
-  .animate-modal { animation: none !important; }
+  html { scroll-behavior:auto; }
+  .landing-page main > section, .animate-rise, .animate-modal, .steerpast-pulse { animation:none !important; }
 }
