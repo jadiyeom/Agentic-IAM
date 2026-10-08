@@ -9,7 +9,7 @@ import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Command } from '
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isAuthed = localStorage.getItem('trustlens-iam-auth') === 'true';
+  const isAuthed = localStorage.getItem('steerpast-iam-auth') === 'true';
   if (!isAuthed) return <Navigate to="/login" state={{ from: location }} replace />;
   return <>{children}</>;
 }
@@ -28,7 +28,7 @@ const DemoNav: React.FC = () => {
   const go = (to: string) => navigate(to, { replace: true });
 
   function exit() {
-    localStorage.removeItem('trustlens-iam-auth');
+    localStorage.removeItem('steerpast-iam-auth');
     navigate('/login', { replace: true });
   }
 
@@ -39,7 +39,7 @@ const DemoNav: React.FC = () => {
           <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/[0.05] transition group-hover:border-white/20 group-hover:bg-white/[0.08]">
             <Command className="h-3.5 w-3.5" />
           </span>
-          TrustLens
+          Steerpast IAM
         </button>
       </div>
 
@@ -82,7 +82,7 @@ const MobileBar: React.FC = () => (
   <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/[0.08] bg-[#08090b]/90 px-4 backdrop-blur-xl lg:hidden">
     <button onClick={() => window.history.back()} className="flex items-center gap-2 text-sm font-semibold text-white">
       <Command className="h-4 w-4" />
-      TrustLens
+      Steerpast IAM
     </button>
     <Link to="/login" replace className="flex items-center gap-1.5 text-xs text-white/55 hover:text-white">
       <ArrowLeft className="h-3.5 w-3.5" />
@@ -106,7 +106,7 @@ const DemoShell: React.FC = () => {
               Live security workspace
             </div>
             <div className="text-[11px] text-white/25">
-              {location.pathname === '/identities' ? 'Identity posture' : 'TrustLens workspace'}
+              {location.pathname === '/identities' ? 'Identity posture' : 'Steerpast IAM workspace'}
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTriangle, Check, ChevronRight, Database, KeyRound, Sparkles } from 'lucide-react';
 
-const demo = () => localStorage.setItem('trustlens-iam-auth', 'true');
+const demo = () => localStorage.setItem('steerpast-iam-auth', 'true');
 
 export const Landing: React.FC = () => (
   <div className="landing-page min-h-screen bg-[#08090b] text-[#f7f7f8] selection:bg-white/20">
@@ -10,7 +10,7 @@ export const Landing: React.FC = () => (
       <nav className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-5 lg:px-8">
         <a href="#" className="flex items-center gap-2.5 text-[15px] font-semibold">
           <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/15 bg-white/[0.06]"><ShieldCheck className="h-4 w-4" /></span>
-          TrustLens
+          Steerpast IAM
         </a>
         <div className="hidden items-center gap-7 text-[13px] text-white/55 md:flex">
           <a href="#product" className="hover:text-white">Product</a>
@@ -35,7 +35,7 @@ export const Landing: React.FC = () => (
             Security for identities<br /><span className="text-white/45">that can act on their own.</span>
           </h1>
           <p className="mx-auto mt-7 max-w-2xl text-[17px] leading-7 text-white/50">
-            TrustLens gives security teams a live map of human and AI-agent access, evaluates risky changes, explains decisions, and turns findings into auditable remediation.
+            Steerpast IAM gives security teams a live map of human and AI-agent access, evaluates risky changes, explains decisions, and turns findings into auditable remediation.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link to="/demo" onClick={demo} className="group inline-flex h-11 items-center gap-2 rounded-lg bg-white px-5 text-[14px] font-medium text-black shadow-[0_0_30px_rgba(255,255,255,.08)] hover:bg-white/90">
@@ -47,11 +47,11 @@ export const Landing: React.FC = () => (
           <div className="product-preview mx-auto mt-20 max-w-5xl overflow-hidden rounded-xl border border-white/10 bg-[#0d0e11] text-left shadow-[0_40px_120px_rgba(0,0,0,.5)]">
             <div className="flex h-10 items-center gap-2 border-b border-white/[0.07] px-4">
               <span className="h-2 w-2 rounded-full bg-white/15" /><span className="h-2 w-2 rounded-full bg-white/15" /><span className="h-2 w-2 rounded-full bg-white/15" />
-              <span className="ml-3 text-[12px] text-white/30">TrustLens / Security overview</span>
+              <span className="ml-3 text-[12px] text-white/30">Steerpast IAM / Security overview</span>
             </div>
             <div className="grid min-h-[350px] md:grid-cols-[190px_1fr]">
               <aside className="hidden border-r border-white/[0.06] p-4 md:block">
-                <div className="mb-5 text-[12px] font-semibold text-white/75">TrustLens</div>
+                <div className="mb-5 text-[12px] font-semibold text-white/75">Steerpast IAM</div>
                 {['Overview','Identities','Entitlements','Audit trail','System'].map((x,i) => (
                   <div key={x} className={`mb-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-[12px] ${i===0?'bg-white/[0.08] text-white':'text-white/35'}`}>
                     <span className="h-1.5 w-1.5 rounded-full bg-current" />{x}
@@ -107,12 +107,12 @@ export const Landing: React.FC = () => (
       </section>
 
       <section id="product" className="mx-auto max-w-[1180px] px-5 py-32 lg:px-8">
-        <SectionIntro eyebrow="The product" title="A security control plane for identity decisions." text="TrustLens sits between identity data and sensitive actions. It turns raw access changes into decisions your security team can understand, review, and audit." />
+        <SectionIntro eyebrow="The product" title="A security control plane for identity decisions." text="Steerpast IAM sits between identity data and sensitive actions. It turns raw access changes into decisions your security team can understand, review, and audit." />
         <div className="mt-16 divide-y divide-white/[0.07] border-y border-white/[0.07]">
           <ProductRow number="01" icon={<Bot />} title="Agent-aware identity" text="Model AI agents like real identities. Track their owner, role, entitlements, environment, and behavior so an agent never becomes an invisible privileged user." items={['Human, service, and AI-agent identities','Entitlement and privilege context','Owner and environment awareness']} />
           <ProductRow number="02" icon={<ShieldCheck />} title="Risk + policy evaluation" text="Combine deterministic controls with contextual risk signals. A permission is not simply good or bad—the decision depends on who requested it, what they can reach, and why." items={['Privilege escalation detection','Policy conflict evaluation','Blast-radius and sensitivity context']} />
           <ProductRow number="03" icon={<Sparkles />} title="Explainable decisions" text="Every important decision gets a human-readable explanation. Security operators can see the evidence behind an allow, deny, review, or revoke recommendation." items={['Decision reasoning','Evidence and contributing signals','Operator-friendly audit narrative']} />
-          <ProductRow number="04" icon={<GitBranch />} title="Remediation loop" text="Close the gap between finding a problem and fixing it. TrustLens turns high-risk access into a proposed action while preserving the original evidence and decision." items={['Revocation recommendations','Review workflows','Immutable decision trail']} />
+          <ProductRow number="04" icon={<GitBranch />} title="Remediation loop" text="Close the gap between finding a problem and fixing it. Steerpast IAM turns high-risk access into a proposed action while preserving the original evidence and decision." items={['Revocation recommendations','Review workflows','Immutable decision trail']} />
         </div>
       </section>
 
@@ -141,7 +141,7 @@ export const Landing: React.FC = () => (
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/35">A concrete decision</p>
             <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">An intern gets production admin access.</h2>
-            <p className="mt-6 text-[15px] leading-7 text-white/45">This is where traditional IAM dashboards stop. TrustLens follows the access change all the way through to a security decision.</p>
+            <p className="mt-6 text-[15px] leading-7 text-white/45">This is where traditional IAM dashboards stop. Steerpast IAM follows the access change all the way through to a security decision.</p>
             <Link to="/demo" onClick={demo} className="mt-8 inline-flex items-center gap-2 text-[13px] font-medium text-white hover:text-white/70">Open this scenario <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#0b0c0f]">
@@ -171,10 +171,10 @@ export const Landing: React.FC = () => (
 
       <section className="mx-auto max-w-[1180px] px-5 py-32 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-2">
-          <div><p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/35">Why TrustLens</p><h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em]">IAM tells you what exists. TrustLens tells you what should happen.</h2></div>
+          <div><p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/35">Why Steerpast IAM</p><h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em]">IAM tells you what exists. Steerpast IAM tells you what should happen.</h2></div>
           <div className="space-y-9">
             <Reason title="Context over alerts" text="Access decisions combine identity, entitlement, sensitivity, policy, and risk context instead of producing another disconnected alert queue." />
-            <Reason title="Agents are first-class" text="AI agents increasingly operate with credentials and permissions. TrustLens treats them as identities that need ownership, policy, and accountability." />
+            <Reason title="Agents are first-class" text="AI agents increasingly operate with credentials and permissions. Steerpast IAM treats them as identities that need ownership, policy, and accountability." />
             <Reason title="Explainability is part of the control" text="A security action without an explanation is difficult to trust. Decisions carry evidence so an operator can understand why the system recommended them." />
             <Reason title="Designed for a small security team" text="Automation handles repetitive evaluation while humans retain the final authority over sensitive remediation." />
           </div>
@@ -183,7 +183,7 @@ export const Landing: React.FC = () => (
 
       <section className="border-y border-white/[0.07] bg-[#0b0c0f]">
         <div className="mx-auto max-w-[1180px] px-5 py-32 lg:px-8">
-          <SectionIntro eyebrow="Architecture" title="A decision system, not another dashboard." text="TrustLens separates identity context, risk analysis, policy evaluation, decisioning, remediation, and audit so each part can be inspected independently." />
+          <SectionIntro eyebrow="Architecture" title="A decision system, not another dashboard." text="Steerpast IAM separates identity context, risk analysis, policy evaluation, decisioning, remediation, and audit so each part can be inspected independently." />
           <div className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ['IdentityAgent','Identity + entitlement context'],['RiskAgent','Risk scoring + blast radius'],['PolicyAgent','Policy and constraint evaluation'],
@@ -218,7 +218,7 @@ export const Landing: React.FC = () => (
 
     <footer className="border-t border-white/[0.07]">
       <div className="mx-auto flex max-w-[1180px] flex-col gap-4 px-5 py-8 text-[13px] text-white/30 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-        <div className="flex items-center gap-2 text-white/55"><ShieldCheck className="h-4 w-4" />TrustLens</div><div>Agentic identity security · Early access</div>
+        <div className="flex items-center gap-2 text-white/55"><ShieldCheck className="h-4 w-4" />Steerpast IAM</div><div>Agentic identity security · Early access</div>
       </div>
     </footer>
   </div>
