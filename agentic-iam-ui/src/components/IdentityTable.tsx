@@ -47,14 +47,14 @@ export const IdentityTable: React.FC<{
           <h2 className="text-[14px] font-medium text-white">Identity access</h2>
           <p className="mt-1 text-[12px] text-white/30">{identities.length} records · evaluated continuously</p>
         </div>
-        <div className="text-[11px] text-white/25">Click a row to inspect</div>
+        <div className="text-[12px] text-white/35">Click a row to inspect</div>
       </div>
 
       <div className="overflow-x-auto">
         <div className="max-h-[620px] overflow-y-auto">
           <table className="min-w-[1040px] w-full text-left">
             <thead className="sticky top-0 z-10 border-b border-white/[0.07] bg-[#0b0c0f]">
-              <tr className="text-[10px] uppercase tracking-[0.12em] text-white/30">
+              <tr className="text-[11px] uppercase tracking-[0.12em] text-white/50">
                 <th className="px-5 py-3.5 font-medium">Identity</th>
                 <th className="px-4 py-3.5 font-medium">Department</th>
                 <th className="px-4 py-3.5 font-medium">Access</th>
@@ -106,7 +106,7 @@ export const IdentityTable: React.FC<{
                       </div>
                       <form className="mt-2.5 flex gap-1.5" onSubmit={e => handleAssignRole(e, vm.identity.id)}>
                         <select
-                          className="h-8 min-w-[150px] rounded-md border border-white/10 bg-[#111216] px-2.5 text-[11px] text-white/60 outline-none focus:border-white/20"
+                          className="h-8 min-w-[150px] appearance-none rounded-[7px] border border-white/10 bg-[#111216] px-2.5 text-[12px] text-white/70 outline-none [color-scheme:dark] focus:border-[#b7ff49]/40 focus:ring-1 focus:ring-[#b7ff49]/20"
                           value={selectedRole[vm.identity.id] || ''}
                           onChange={e => setSelectedRole(s => ({...s, [vm.identity.id]: e.target.value}))}
                           disabled={assigningId === vm.identity.id}
@@ -132,14 +132,24 @@ export const IdentityTable: React.FC<{
                     </td>
 
                     <td className="px-5 py-4 text-right align-middle">
-                      <button
-                        onClick={e => handleDelete(e, vm.identity.id)}
-                        disabled={deletingId === vm.identity.id}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-400/15 px-2.5 text-[11px] text-red-300/70 opacity-0 transition group-hover:opacity-100 hover:border-red-400/30 hover:bg-red-400/[0.07] hover:text-red-200 disabled:opacity-40"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        {deletingId === vm.identity.id ? 'Deleting' : 'Delete'}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={e => { e.stopPropagation(); onSelect(vm.identity.id); }}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-[7px] border border-white/10 bg-white/[0.035] px-3 text-[12px] font-medium text-white/65 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                        >
+                          Inspect
+                        </button>
+                        <button
+                          type="button"
+                          onClick={e => handleDelete(e, vm.identity.id)}
+                          disabled={deletingId === vm.identity.id}
+                          aria-label={`Delete ${vm.identity.name}`}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-[7px] border border-red-400/10 text-red-300/55 transition hover:border-red-400/30 hover:bg-red-400/[0.07] hover:text-red-200 disabled:opacity-40"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
