@@ -83,8 +83,12 @@ export const RemediationActions: React.FC<Props> = ({ viewModel, onActionComplet
       </div>
       <div className="mt-1 text-[11px] text-slate-400">
         Decision: <span className="font-semibold text-slate-100">{decision.outcome}</span> (
-        {Math.round(decision.confidence * 100)}% confidence, LLM:{' '}
-        {decision.usedLLM ? 'enabled' : 'heuristic only'}).
+        {Math.round(decision.confidence * 100)}% confidence,{' '}
+        {decision.decisionProvider === 'claude'
+          ? 'Claude'
+          : decision.decisionProvider === 'huggingface'
+            ? 'Hugging Face'
+            : 'heuristic'}).
       </div>
       <textarea
         value={reason}

@@ -82,6 +82,7 @@ export interface DecisionResult {
   rationale: string;
   confidence: number;
   usedLLM: boolean;
+  decisionProvider: 'claude' | 'huggingface' | 'heuristic';
 }
 
 export interface AuditRecord {

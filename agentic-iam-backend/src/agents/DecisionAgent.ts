@@ -23,6 +23,7 @@ export interface DecisionResult {
   rationale: string;
   confidence: number; // 0-1
   usedLLM: boolean;
+  decisionProvider: 'claude' | 'huggingface' | 'heuristic';
 }
 
 export class DecisionAgent {
@@ -47,11 +48,57 @@ export class DecisionAgent {
         messages: [{ role: 'user', content: JSON.stringify({ identity, risk, policyViolations: policy.violations }) }],
       });
       const text = response.content.find((block) => block.type === 'text')?.text || '';
-      const parsed = JSON.parse(text.match(/\{[\\s\\S]*\}/)?.[0] || text);
-      return { identityId: identity.id, outcome: parsed.outcome, rationale: parsed.rationale, confidence: Number(parsed.confidence), usedLLM: true };
+      const parsed = this.parseDecisionResponse(text);
+      return {
+        identityId: identity.id,
+        outcome: parsed.outcome,
+        rationale: parsed.rationale,
+        confidence: parsed.confidence,
+        usedLLM: true,
+        decisionProvider: 'claude',
+      };
     } catch {
       return this.decideHeuristically(context);
     }
+  }
+
+  private parseDecisionResponse(text: string): {
+    outcome: DecisionOutcome;
+    rationale: string;
+    confidence: number;
+  } {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch?.[0] || text) as {
+      outcome?: string;
+      rationale?: string;
+      confidence?: number;
+    };
+
+    const validOutcomes: DecisionOutcome[] = [
+      'APPROVE',
+      'FLAG_FOR_REVIEW',
+      'RECOMMEND_REVOCATION',
+      'AUTO_REMEDIATE',
+    ];
+
+    if (!parsed.outcome || !validOutcomes.includes(parsed.outcome as DecisionOutcome)) {
+      throw new Error('Claude returned an invalid decision outcome');
+    }
+
+    if (typeof parsed.rationale !== 'string' || !parsed.rationale.trim()) {
+      throw new Error('Claude returned an invalid rationale');
+    }
+
+    const confidence = Number(parsed.confidence);
+    if (!Number.isFinite(confidence)) {
+      throw new Error('Claude returned an invalid confidence score');
+    }
+
+    return {
+      outcome: parsed.outcome as DecisionOutcome,
+      rationale: parsed.rationale.trim(),
+      confidence: Math.max(0, Math.min(1, confidence)),
+    };
   }
 
   private async decideWithLLM(context: DecisionContext): Promise<DecisionResult> {
@@ -123,6 +170,7 @@ export class DecisionAgent {
         rationale: parsed.rationale,
         confidence: parsed.confidence,
         usedLLM: true,
+        decisionProvider: 'huggingface',
       };
     } catch (err) {
       // Fallback to heuristic if LLM call fails.
@@ -167,6 +215,7 @@ export class DecisionAgent {
       rationale,
       confidence,
       usedLLM: false,
+      decisionProvider: 'heuristic',
     };
   }
 }
