@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTriangle, Check, ChevronRight, Database, KeyRound, Sparkles, Fingerprint, Network, ScanSearch, Plus, Cpu, ServerCog, ArrowUpRight } from 'lucide-react';
 
 const demo = () => localStorage.setItem('steerpast-iam-auth','true');
-const contactHref = 'mailto:' + ['omjadiye','steerpast.com'].join('@');
+
+const contactHref = '/company#contact';
 
 const SteerpastMark = ({className='h-7 w-7'}:{className?:string}) => (
   <img src="/steerpast-logo.png" alt="" aria-hidden="true" className={`shrink-0 rounded-[9px] object-cover ${className}`} />
@@ -22,21 +23,33 @@ const faqItems = [
 
 export const Landing: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [activeSection, setActiveSection] = useState('product');
+
+  useEffect(() => {
+    const ids = ['product', 'how-it-works', 'scenario', 'pricing', 'claude', 'security', 'faq'];
+    const observer = new IntersectionObserver(
+      entries => {
+        const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActiveSection(visible.target.id);
+      },
+      { rootMargin: '-18% 0px -65% 0px', threshold: [0.05, 0.2, 0.5] }
+    );
+    ids.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="landing-page min-h-screen bg-[#08090a] text-[#eeeae0] selection:bg-[#b7ff49]/20">
       <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#08090a]/90 backdrop-blur-xl">
         <nav className="mx-auto flex h-[68px] max-w-[1160px] items-center justify-between px-5 lg:px-8">
           <a href="#" className="flex items-center gap-2.5 text-[14px] font-semibold tracking-[-0.02em]">
-            <SteerpastMark className="h-7 w-7" />
+            <SteerpastMark className="h-8 w-8" />
             Steerpast <span className="text-white/30">IAM</span>
           </a>
-          <div className="hidden items-center gap-6 text-[12px] text-white/45 md:flex">
-            <a href="#product" className="transition hover:text-white">Product</a>
-            <a href="#how-it-works" className="transition hover:text-white">How it works</a>
-            <a href="#scenario" className="transition hover:text-white">Scenario</a>
-            <a href="#pricing" className="transition hover:text-white">Pricing</a>
-            <a href="#claude" className="transition hover:text-white">Claude</a><a href="#security" className="transition hover:text-white">Security</a><a href="#faq" className="transition hover:text-white">FAQ</a>
+          <div className="hidden items-center gap-1 rounded-full border border-white/[0.06] bg-white/[0.025] p-1 text-[12px] md:flex">
+            {[['product','Product'],['how-it-works','How it works'],['scenario','Scenario'],['pricing','Pricing'],['claude','Claude'],['security','Security'],['faq','FAQ']].map(([id,label]) => (
+              <a key={id} href={`#${id}`} className={`rounded-full px-3 py-1.5 transition hover:bg-white/[0.07] hover:text-white ${activeSection===id ? 'bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,.05)]' : 'text-white/45'}`}>{label}</a>
+            ))}
           </div>
           <Link to="/demo" onClick={demo} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#eeeae0] px-4 text-[12px] font-medium text-[#08090a] transition hover:bg-white">
             View demo <ArrowRight className="h-3.5 w-3.5" />
@@ -48,7 +61,13 @@ export const Landing: React.FC = () => {
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute left-1/2 top-0 h-[560px] w-[900px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(183,255,73,0.08),transparent_62%)]" />
           <div className="relative mx-auto max-w-[1000px] px-5 pb-28 pt-24 text-center lg:pt-32">
-            <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-white/45">
+            <div className="mb-8 flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-[-18px] rounded-[28px] bg-[#b7ff49]/10 blur-2xl" />
+                <img src="/steerpast-logo.png" alt="Steerpast" className="relative h-20 w-20 rounded-[22px] object-cover shadow-[0_12px_48px_rgba(183,255,73,.12)] sm:h-24 sm:w-24" />
+              </div>
+            </div>
+            <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-[#b7ff49] shadow-[0_0_12px_rgba(183,255,73,.7)]" />
               Identity security for the agentic era
             </div>
@@ -68,7 +87,7 @@ export const Landing: React.FC = () => {
             </div>
 
             <div className="mt-16 flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.16em] text-white/22"><span>A product preview</span><span className="rounded-full border border-white/10 px-2 py-0.5 text-[8px] tracking-[0.12em] text-white/30">synthetic demo data</span></div>
-            <div className="product-preview mx-auto mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#101113] text-left">
+            <div className="product-preview surface-lift mx-auto mt-5 overflow-hidden rounded-[24px] border text-left">
               <div className="flex h-10 items-center border-b border-white/[0.07] px-4">
                 <div className="flex gap-1.5"><span className="h-2 w-2 rounded-full bg-white/15"/><span className="h-2 w-2 rounded-full bg-white/15"/><span className="h-2 w-2 rounded-full bg-white/15"/></div>
                 <span className="ml-4 font-mono text-[9px] text-white/22">steerpast.com / security-overview</span>
@@ -130,7 +149,7 @@ export const Landing: React.FC = () => {
                 <Link to="/claude" className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-[12px] text-white/60 transition hover:border-white/20 hover:text-white">See the Claude architecture <ArrowUpRight className="h-3.5 w-3.5"/></Link>
               </div>
               <div className="rounded-2xl border border-[#b7ff49]/15 bg-[#b7ff49]/[0.025] p-6">
-                <div className="flex items-center gap-3"><Cpu className="h-4 w-4 text-[#b7ff49]"/><div className="text-[13px] font-medium">Decision pipeline</div></div>
+                <div className="flex items-center gap-3"><Cpu className="h-4 w-4 text-[#b7ff49]"/><div className="text-[14px] font-medium">Decision pipeline</div></div>
                 <div className="mt-6 space-y-3">
                   {[
                     ['Identity context','owner · role · entitlements','white'],
@@ -150,8 +169,24 @@ export const Landing: React.FC = () => {
         <section id="how-it-works" className="border-y border-white/[0.08] bg-[#0b0c0d]">
           <div className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
             <SectionIntro eyebrow="How it works" title="Set the context. Let the system follow the decision." text="Five focused steps connect an access event to an accountable outcome."/>
-            <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] md:grid-cols-5">
-              {[['01','Observe','IdentityAgent','Collect identity and entitlement context.'],['02','Assess','RiskAgent','Score privilege, sensitivity, and behavior.'],['03','Evaluate','PolicyAgent','Check policies and access constraints.'],['04','Decide','DecisionAgent','Produce an explainable outcome.'],['05','Act','RemediationAgent','Recommend the safest next action.']].map(([n,t,a,d])=><div key={n} className="bg-[#0b0c0d] p-6 md:min-h-[230px]"><div className="font-mono text-[9px] text-white/20">{n}</div><div className="mt-12 text-[14px] font-medium">{t}</div><div className="mt-2 font-mono text-[9px] text-white/25">{a}</div><p className="mt-4 text-[12px] leading-5 text-white/30">{d}</p></div>)}
+            <div className="relative mt-14 overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#101113] p-5 sm:p-7">
+              <div className="pointer-events-none absolute left-[9%] right-[9%] top-[72px] hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" />
+              <div className="grid gap-3 md:grid-cols-5">
+                {[
+                  ['01','Observe','IdentityAgent','Collect identity + entitlement context.',Eye],
+                  ['02','Assess','RiskAgent','Score privilege, sensitivity + behavior.',ScanSearch],
+                  ['03','Evaluate','PolicyAgent','Check controls + access constraints.',ShieldCheck],
+                  ['04','Decide','DecisionAgent','Produce an explainable outcome.',Sparkles],
+                  ['05','Act','RemediationAgent','Recommend the safest next action.',GitBranch]
+                ].map(([n,t,a,d,Icon])=>{ const I=Icon as React.ElementType; return (
+                  <div key={n as string} className="relative rounded-xl border border-white/[0.07] bg-[#0b0c0d]/90 p-5 transition duration-200 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.04]">
+                    <div className="relative z-10 flex items-center justify-between"><span className="font-mono text-[11px] text-white/55">{n as string}</span><span className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.035] text-white/55"><I className="h-4 w-4"/></span></div>
+                    <div className="mt-8 text-[14px] font-medium">{t as string}</div>
+                    <div className="mt-2 font-mono text-[11px] text-white/55">{a as string}</div>
+                    <p className="mt-4 text-[13px] leading-6 text-white/42">{d as string}</p>
+                  </div>
+                ); })}
+              </div>
             </div>
           </div>
         </section>
@@ -162,9 +197,9 @@ export const Landing: React.FC = () => {
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25">A concrete decision</div>
               <h2 className="mt-5 font-serif text-4xl font-medium tracking-[-0.04em] sm:text-5xl">An intern gets production admin access.</h2>
               <p className="mt-6 text-[14px] leading-7 text-white/38">Instead of stopping at “permission changed,” Steerpast follows the event through identity context, risk, policy, decision, and remediation.</p>
-              <Link to="/demo" onClick={demo} className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-[12px] text-white/60 transition hover:border-white/20 hover:text-white">Open this scenario <ArrowRight className="h-3.5 w-3.5"/></Link>
+              <Link to="/demo" onClick={demo} className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-[12px] text-white/60 transition hover:border-white/20 hover:bg-white/[0.06] hover:text-white">Open this scenario <ArrowRight className="h-3.5 w-3.5"/></Link>
             </div>
-            <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#101113]">
+            <div className="surface-lift overflow-hidden rounded-[22px] border">
               <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4"><span className="font-mono text-[9px] text-white/25">decision-trace / 14:32:08 UTC</span><span className="rounded-full border border-red-400/15 bg-red-400/[0.05] px-2 py-1 text-[8px] text-red-300">HIGH RISK</span></div>
               <div className="px-5"><Trace icon={<Bot/>} label="Identity" value="deployment-intern" detail="Human identity · Engineering · Intern"/><Trace icon={<KeyRound/>} label="Access change" value="production-db.admin" detail="New privileged entitlement detected"/><Trace icon={<AlertTriangle/>} label="Risk" value="High · 92 / 100" detail="Production data + privilege escalation"/><Trace icon={<ShieldCheck/>} label="Policy" value="Conflict detected" detail="Intern role cannot hold production admin access"/><Trace icon={<Check/>} label="Decision" value="Recommend revocation" detail="Evidence retained for audit" last/></div>
             </div>
@@ -174,8 +209,30 @@ export const Landing: React.FC = () => {
         <section id="architecture" className="border-y border-white/[0.08] bg-[#0b0c0d]">
           <div className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
             <SectionIntro eyebrow="Architecture" title="Six specialized agents. One accountable control plane." text="Each agent has a narrow responsibility. The orchestrator connects their outputs into a decision that can be inspected instead of hiding everything behind one opaque score."/>
-            <div className="mt-14 grid overflow-hidden rounded-2xl border border-white/[0.08] sm:grid-cols-2 lg:grid-cols-3">
-              {[['IdentityAgent','Identity graph','Who is acting, and what context belongs to them?',Fingerprint],['RiskAgent','Risk engine','How dangerous is this access in context?',Activity],['PolicyAgent','Policy evaluation','Does the requested access violate a control?',ShieldCheck],['DecisionAgent','Decision synthesis','What should happen, and why?',Sparkles],['RemediationAgent','Action loop','What safe next action closes the gap?',GitBranch],['AuditAgent','Evidence trail','Can every decision be reconstructed later?',Database]].map(([name,sub,text,Icon])=>{const I=Icon as React.ElementType; return <div key={name as string} className="border-b border-r border-white/[0.07] p-6"><I className="h-4 w-4 text-white/40"/><div className="mt-6 font-mono text-[10px] text-white/30">{name as string}</div><div className="mt-1 text-[14px] font-medium">{sub as string}</div><p className="mt-3 text-[12px] leading-5 text-white/28">{text as string}</p></div>})}
+            <div className="surface-soft relative mt-14 overflow-hidden rounded-[24px] border border-white/[0.08] p-6 sm:p-8">
+              <div className="grid gap-4 lg:grid-cols-[1fr_170px_1fr] lg:items-center">
+                <div className="grid gap-3">
+                  {[
+                    ['IdentityAgent','Identity graph','Who is acting?',Fingerprint],
+                    ['RiskAgent','Risk engine','How risky is it?',Activity],
+                    ['PolicyAgent','Policy evaluation','Is access allowed?',ShieldCheck]
+                  ].map(([name,sub,text,Icon])=>{const I=Icon as React.ElementType; return <div key={name as string} className="rounded-xl border border-white/[0.07] bg-[#0b0c0d] p-5 transition hover:border-white/15 hover:bg-white/[0.035]"><div className="flex items-center gap-3"><I className="h-4 w-4 text-white/50"/><span className="font-mono text-[11px] text-white/65">{name as string}</span></div><div className="mt-2 text-[13px] font-medium">{sub as string}</div><p className="mt-1.5 text-[12px] leading-5 text-white/35">{text as string}</p></div>})}
+                </div>
+                <div className="relative flex min-h-[180px] items-center justify-center">
+                  <div className="absolute hidden h-full w-px bg-gradient-to-b from-white/5 via-[#b7ff49]/35 to-white/5 lg:block" />
+                  <div className="absolute -left-3 right-[-10px] top-1/2 hidden h-px bg-[#b7ff49]/25 lg:block" />
+                  <div className="relative z-10 grid h-28 w-28 place-items-center rounded-[22px] border border-[#b7ff49]/30 bg-[#b7ff49]/[0.07] shadow-[0_0_70px_rgba(183,255,73,.08)]">
+                    <div className="text-center"><Sparkles className="mx-auto h-5 w-5 text-[#b7ff49]"/><div className="mt-3 font-mono text-[11px] text-white/75">DecisionAgent</div><div className="mt-1 text-[10px] text-white/30">synthesize</div></div>
+                  </div>
+                </div>
+                <div className="grid gap-3">
+                  {[
+                    ['RemediationAgent','Action loop','What closes the gap?',GitBranch],
+                    ['AuditAgent','Evidence trail','Can it be reconstructed?',Database],
+                    ['Claude','Model reasoning','Where context needs synthesis.',Cpu]
+                  ].map(([name,sub,text,Icon])=>{const I=Icon as React.ElementType; return <div key={name as string} className="rounded-xl border border-white/[0.07] bg-[#0b0c0d] p-5 transition hover:border-white/15 hover:bg-white/[0.035]"><div className="flex items-center gap-3"><I className="h-4 w-4 text-white/50"/><span className="font-mono text-[11px] text-white/65">{name as string}</span></div><div className="mt-2 text-[13px] font-medium">{sub as string}</div><p className="mt-1.5 text-[12px] leading-5 text-white/35">{text as string}</p></div>})}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -196,8 +253,15 @@ export const Landing: React.FC = () => {
               <h2 className="mt-4 font-serif text-3xl font-medium leading-tight tracking-[-0.04em] sm:text-5xl">Built to make security decisions inspectable.</h2>
               <p className="mt-5 text-[14px] leading-7 text-white/36">The public demo is intentionally isolated and uses sample data. Production integrations should keep secrets server-side and preserve human authority over sensitive remediation.</p>
             </div>
-            <div className="grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2">
-              []
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#101113] p-6 sm:p-7">
+              <div className="absolute right-[-80px] top-[-80px] h-56 w-56 rounded-full bg-[#b7ff49]/[0.07] blur-3xl" />
+              <div className="relative flex items-center gap-4">
+                <img src="/steerpast-logo.png" alt="Steerpast" className="h-14 w-14 rounded-[16px] object-cover ring-1 ring-white/10" />
+                <div><div className="text-[14px] font-medium">Decision evidence</div><div className="mt-1 text-[12px] text-white/30">Every important access decision stays inspectable.</div></div>
+              </div>
+              <div className="relative mt-6 space-y-2">
+                {[['01','Identity context','owner · role · entitlement'],['02','Risk + policy','privilege · sensitivity · constraint'],['03','Decision','outcome · rationale · confidence'],['04','Action trail','review · revoke · audit evidence']].map(([n,title,detail])=><div key={n} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3"><span className="font-mono text-[9px] text-white/20">{n}</span><div className="min-w-0"><div className="text-[12px] font-medium text-white/70">{title}</div><div className="mt-0.5 font-mono text-[9px] text-white/22">{detail}</div></div><Check className="ml-auto h-3.5 w-3.5 shrink-0 text-[#b7ff49]/65"/></div>)}
+              </div>
             </div>
           </div>
           <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2">
@@ -206,7 +270,7 @@ export const Landing: React.FC = () => {
               ['Server-side secrets','Anthropic credentials are read from server environment variables, never from browser code.'],
               ['Validated model output','DecisionAgent accepts only supported outcomes, non-empty rationales, and numeric confidence.'],
               ['Human authority','Operators can review, revoke, or override a recommendation and record the reason.']
-            ].map(([title,text])=><div key={title} className="bg-[#0b0c0d] p-6"><div className="text-[13px] font-medium">{title}</div><p className="mt-3 text-[11px] leading-5 text-white/28">{text}</p></div>)}
+            ].map(([title,text])=><div key={title} className="bg-[#0b0c0d] p-6"><div className="text-[14px] font-medium">{title}</div><p className="mt-3 text-[12px] leading-6 text-white/28">{text}</p></div>)}
           </div>
           <Link to="/security" className="mt-8 inline-flex items-center gap-2 text-[12px] text-white/45 hover:text-white">Read the security model <ArrowUpRight className="h-3.5 w-3.5"/></Link>
         </section>
@@ -215,11 +279,11 @@ export const Landing: React.FC = () => {
             <SectionIntro eyebrow="Pricing" title="Start small. Grow when the workflow proves itself." text="Simple early-access pricing while the product is being validated with security teams."/>
             <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                {name:'Free',price:'$0',sub:'Explore the model',items:['Identity posture','Decision trace','Local demo']},
-                {name:'Pilot',price:'$29',sub:'per month · early access',items:['Everything in Free','Agent-aware identities','Remediation controls','Audit evidence'],featured:true},
-                {name:'Growth',price:'$99',sub:'per month · growing teams',items:['Everything in Pilot','Advanced policy controls','Team workspaces','Priority support']},
-                {name:'Enterprise',price:'Custom',sub:'deployment & governance',items:['Custom integrations','Security requirements','Deployment support','Volume & SLA planning']}
-              ].map(t=><div key={t.name} className={`relative rounded-2xl border p-7 ${t.featured?'border-[#b7ff49]/25 bg-[#b7ff49]/[0.035]':'border-white/[0.08] bg-white/[0.015]'}`}>{t.featured&&<div className="absolute right-5 top-5 rounded-full border border-[#b7ff49]/20 px-2 py-1 text-[8px] uppercase tracking-wider text-[#b7ff49]/65">Popular</div>}<div className="text-[12px] font-medium">{t.name}</div><div className="mt-7 font-serif text-4xl tracking-[-0.04em]">{t.price}</div><div className="mt-1 text-[10px] text-white/22">{t.sub}</div><ul className="mt-8 space-y-3">{t.items.map(x=><li key={x} className="flex gap-2 text-[11px] text-white/38"><Check className="mt-0.5 h-3.5 w-3.5 text-[#b7ff49]/60"/>{x}</li>)}</ul></div>)}
+                {name:'Free',price:'$0',sub:'Explore the model',items:['Identity posture','Decision trace','Local demo'],cta:'Explore demo'},
+                {name:'Pilot',price:'$29',sub:'per month · early access',items:['Everything in Free','Agent-aware identities','Remediation controls','Audit evidence'],featured:true,cta:'Start pilot'},
+                {name:'Growth',price:'$99',sub:'per month · growing teams',items:['Everything in Pilot','Advanced policy controls','Team workspaces','Priority support'],cta:'Talk to us'},
+                {name:'Enterprise',price:'Custom',sub:'deployment & governance',items:['Custom integrations','Security requirements','Deployment support','Volume & SLA planning'],cta:'Contact team'}
+              ].map(t=><div key={t.name} className={`relative flex min-h-[410px] flex-col rounded-[20px] border p-7 ${t.featured?'border-[#b7ff49]/35 bg-[#b7ff49]/[0.055] shadow-[0_0_70px_rgba(183,255,73,.07)]':'border-white/[0.08] bg-white/[0.018]'}`}>{t.featured&&<div className="absolute right-5 top-5 rounded-full bg-[#b7ff49] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#08090a]">Popular</div>}<div className="text-[13px] font-medium">{t.name}</div><div className="mt-7 font-serif text-4xl tracking-[-0.04em]">{t.price}</div><div className="mt-1 text-[11px] text-white/45">{t.sub}</div><ul className="mt-8 space-y-3">{t.items.map(x=><li key={x} className="flex gap-2 text-[12px] text-white/50"><Check className="mt-0.5 h-3.5 w-3.5 text-[#b7ff49]/65"/>{x}</li>)}</ul><Link to={t.name==='Free'?'/demo':'/company#contact'} onClick={t.name==='Free'?demo:undefined} className={`mt-auto inline-flex h-10 items-center justify-center rounded-full px-4 text-[12px] font-semibold transition hover:-translate-y-0.5 ${t.featured?'bg-[#b7ff49] text-[#08090a] hover:bg-[#d0ff88]':'border border-white/10 bg-white/[0.035] text-white/70 hover:border-white/20 hover:bg-white/[0.08] hover:text-white'}`}>{t.cta}</Link></div>)}
             </div>
           </div>
         </section>
@@ -235,7 +299,7 @@ export const Landing: React.FC = () => {
               const open=openFaq===i;
               return <div key={question} className="border-b border-white/[0.1]">
                 <button type="button" onClick={()=>setOpenFaq(open?null:i)} className="flex w-full items-center justify-between gap-6 py-6 text-left">
-                  <span className={`text-[13px] font-medium transition ${open?'text-white':'text-white/65'}`}>{question}</span>
+                  <span className={`text-[14px] font-medium transition ${open?'text-white':'text-white/65'}`}>{question}</span>
                   <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/10 text-white/35 transition-transform duration-200 ${open?'rotate-45':''}`}><Plus className="h-3.5 w-3.5"/></span>
                 </button>
                 <div className={`grid transition-[grid-template-rows,opacity] duration-200 ${open?'grid-rows-[1fr] opacity-100':'grid-rows-[0fr] opacity-0'}`}>
@@ -259,10 +323,15 @@ export const Landing: React.FC = () => {
         </section>
       </main>
 
-      <footer className="border-t border-white/[0.08]">
-        <div className="mx-auto flex max-w-[1160px] flex-col gap-6 px-5 py-8 text-[10px] text-white/22 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <div className="flex items-center gap-2 text-white/55"><SteerpastMark className="h-6 w-6"/>Steerpast IAM</div>
-          <div className="flex flex-wrap items-center gap-5"><a href="#product" className="hover:text-white/55">Product</a><a href="#pricing" className="hover:text-white/55">Pricing</a><a href="#faq" className="hover:text-white/55">FAQ</a><a href="/claude" className="hover:text-white/55">Claude</a><a href="/security" className="hover:text-white/55">Security</a><a href="/company" className="hover:text-white/55">Company</a><a href={contactHref} className="hover:text-white/55">Contact</a><span>© 2026 Steerpast</span></div>
+      <footer className="border-t border-white/[0.08] bg-[#0b0c0d]">
+        <div className="mx-auto max-w-[1160px] px-5 py-14 lg:px-8">
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            <div><div className="flex items-center gap-2 text-[14px] font-semibold text-white/75"><SteerpastMark className="h-8 w-8"/>Steerpast IAM</div><p className="mt-4 max-w-xs text-[12px] leading-6 text-white/35">Identity security for systems where humans, services, and AI agents can act with real permissions.</p></div>
+            <div><div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Product</div><div className="mt-4 space-y-3 text-[12px] text-white/45"><a href="#product" className="block transition hover:text-white">Product</a><a href="#how-it-works" className="block transition hover:text-white">How it works</a><a href="#pricing" className="block transition hover:text-white">Pricing</a></div></div>
+            <div><div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Resources</div><div className="mt-4 space-y-3 text-[12px] text-white/45"><a href="/claude" className="block transition hover:text-white">Claude integration</a><a href="/security" className="block transition hover:text-white">Security</a><a href="/company" className="block transition hover:text-white">Company</a><a href="/demo" className="block transition hover:text-white">Demo</a></div></div>
+            <div><div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Company</div><div className="mt-4 space-y-3 text-[12px] text-white/45"><a href="/company#contact" className="block transition hover:text-white">Contact</a><a href="/privacy" className="block transition hover:text-white">Privacy</a><a href="/terms" className="block transition hover:text-white">Terms</a></div></div>
+          </div>
+          <div className="mt-12 flex flex-col gap-3 border-t border-white/[0.07] pt-5 text-[11px] text-white/25 sm:flex-row sm:items-center sm:justify-between"><span>© 2026 Steerpast</span><span>Early access · Product preview</span></div>
         </div>
       </footer>
     </div>
@@ -273,17 +342,17 @@ function Metric({label,value,delta,danger=false}:{label:string;value:string;delt
   return <div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-4"><div className="text-[9px] uppercase tracking-[0.12em] text-white/22">{label}</div><div className={`mt-2 text-2xl font-semibold tracking-[-0.035em] ${danger?'text-red-200':'text-white'}`}>{value}</div><div className={`mt-1 text-[9px] ${danger?'text-red-300/60':'text-white/22'}`}>{delta}</div></div>;
 }
 function Signal({icon,title,text}:{icon:React.ReactNode;title:string;text:string}) {
-  return <div className="flex gap-4 border-r border-white/[0.08] px-5 py-8 first:pl-0 last:border-r-0 last:pr-0"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.02] text-white/45">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[13px] font-medium">{title}</div><p className="mt-1.5 text-[11px] leading-5 text-white/30">{text}</p></div></div>;
+  return <div className="flex gap-4 border-r border-white/[0.08] px-5 py-8 first:pl-0 last:border-r-0 last:pr-0"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.02] text-white/45">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[14px] font-medium">{title}</div><p className="mt-1.5 text-[12px] leading-6 text-white/30">{text}</p></div></div>;
 }
 function SectionIntro({eyebrow,title,text}:{eyebrow:string;title:string;text:string}) {
   return <div className="max-w-2xl"><div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25">{eyebrow}</div><h2 className="mt-4 font-serif text-3xl font-medium leading-tight tracking-[-0.04em] sm:text-5xl">{title}</h2><p className="mt-5 text-[14px] leading-7 text-white/36">{text}</p></div>;
 }
 function Feature({number,icon,title,text,items}:{number:string;icon:React.ReactNode;title:string;text:string;items:string[]}) {
-  return <div className="grid gap-8 py-12 md:grid-cols-[72px_1fr_1fr] md:items-start"><div className="font-mono text-[10px] text-white/18">{number}</div><div><div className="flex items-center gap-3">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4 text-white/45'})}<h3 className="text-[15px] font-medium">{title}</h3></div><p className="mt-4 max-w-lg text-[13px] leading-7 text-white/35">{text}</p></div><ul className="space-y-3 md:pt-1">{items.map(item=><li key={item} className="flex gap-3 text-[12px] text-white/38"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b7ff49]/55"/>{item}</li>)}</ul></div>;
+  return <div className="grid gap-8 py-12 md:grid-cols-[72px_1fr_1fr] md:items-start"><div className="font-mono text-[10px] text-white/18">{number}</div><div><div className="flex items-center gap-3">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4 text-white/45'})}<h3 className="text-[15px] font-medium">{title}</h3></div><p className="mt-4 max-w-lg text-[14px] leading-7 text-white/35">{text}</p></div><ul className="space-y-3 md:pt-1">{items.map(item=><li key={item} className="flex gap-3 text-[12px] text-white/38"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b7ff49]/55"/>{item}</li>)}</ul></div>;
 }
 function Trace({icon,label,value,detail,last=false}:{icon:React.ReactNode;label:string;value:string;detail:string;last?:boolean}) {
   return <div className={`flex gap-4 py-4 ${last?'':'border-b border-white/[0.06]'}`}><div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/10 bg-[#101113] text-white/40">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[9px] uppercase tracking-[0.12em] text-white/20">{label}</div><div className="mt-1 text-[12px] font-medium text-white/70">{value}</div><div className="mt-1 text-[10px] leading-5 text-white/28">{detail}</div></div></div>;
 }
 function Reason({title,text}:{title:string;text:string}) {
-  return <div className="border-t border-white/[0.1] pt-5"><h3 className="text-[14px] font-medium">{title}</h3><p className="mt-2 text-[12px] leading-6 text-white/32">{text}</p></div>;
+  return <div className="border-t border-white/[0.1] pt-5"><h3 className="text-[14px] font-medium">{title}</h3><p className="mt-2 text-[14px] leading-7 text-white/32">{text}</p></div>;
 }
