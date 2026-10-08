@@ -2,8 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+html { scroll-behavior: smooth; }
 body {
   @apply bg-surface text-slate-100;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-
+@keyframes trustlens-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trustlens-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.landing-page main > section {
+  animation: trustlens-fade-up .7s cubic-bezier(.22,1,.36,1) both;
+}
+.landing-page main > section:nth-child(2) { animation-delay: .06s; }
+.landing-page main > section:nth-child(3) { animation-delay: .12s; }
+.landing-page main > section:nth-child(4) { animation-delay: .18s; }
+.landing-page main > section:nth-child(5) { animation-delay: .24s; }
+.landing-page main > section:nth-child(6) { animation-delay: .30s; }
+.landing-page main > section:nth-child(7) { animation-delay: .36s; }
+.landing-page main > section:nth-child(8) { animation-delay: .42s; }
+.landing-page a, .landing-page button { transition: all .2s ease; }
+.landing-page .product-preview { animation: trustlens-float 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .landing-page main > section, .landing-page .product-preview { animation: none !important; }
+}
