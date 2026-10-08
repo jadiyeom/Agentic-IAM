@@ -14,7 +14,19 @@
       "destination": "/api/index"
     },
     {
-      "source": "/((?!assets/|api/).*)",
+      "source": "/claude",
+      "destination": "/claude/index.html"
+    },
+    {
+      "source": "/security",
+      "destination": "/security/index.html"
+    },
+    {
+      "source": "/company",
+      "destination": "/company/index.html"
+    },
+    {
+      "source": "/((?!assets/|api/|claude/|security/|company/).*)",
       "destination": "/index.html"
     }
   ]
