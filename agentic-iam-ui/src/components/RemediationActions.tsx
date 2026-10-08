@@ -1,99 +1,18 @@
-import React, { useState } from 'react';
-import { DecisionOutcome, IdentityViewModel, performRemediationAction } from '../services/iamApi';
-import { Ban, ClipboardList, ThumbsUp } from 'lucide-react';
+import React,{useState} from 'react';
+import {DecisionOutcome,IdentityViewModel,performRemediationAction} from '../services/iamApi';
+import {Ban,ClipboardList,ThumbsUp,ArrowRight} from 'lucide-react';
 
-interface Props {
-  viewModel: IdentityViewModel | null;
-  onActionCompleted?: () => void;
-}
-
-export const RemediationActions: React.FC<Props> = ({ viewModel, onActionCompleted }) => {
-  const [loading, setLoading] = useState<DecisionOutcome | 'IGNORE' | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [reason, setReason] = useState('');
-
-  if (!viewModel) {
-    return (
-      <div className="rounded-xl border border-dashed border-slate-700/80 bg-surfaceAlt/60 p-4 text-xs text-slate-500">
-        Select an identity to trigger remediation actions against the current decision.
-      </div>
-    );
-  }
-
-  const decision = viewModel.decision;
-
-  async function trigger(action: 'REVOKE_ACCESS' | 'SEND_FOR_REVIEW' | 'IGNORE') {
-    try {
-      setLoading(action === 'IGNORE' ? 'IGNORE' : decision.outcome);
-      setError(null);
-      await performRemediationAction({
-        identityId: viewModel.identity.id,
-        action,
-        decisionOutcome: decision.outcome,
-        reason: action === 'IGNORE' ? reason || 'Explicit human override' : undefined,
-      });
-      if (onActionCompleted) onActionCompleted();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
-      setError('Failed to apply remediation; see console for details.');
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-surfaceAlt/90 p-4 shadow-lg">
-      <div className="mb-1 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-50">Remediation Controls</h3>
-          <p className="text-xs text-slate-400">
-            Execute or override the agent&apos;s recommendation for this identity.
-          </p>
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <button
-          type="button"
-          onClick={() => trigger('REVOKE_ACCESS')}
-          disabled={loading !== null}
-          className="flex flex-col items-center gap-1 rounded-lg border border-danger/70 bg-danger/15 px-2 py-2 text-[11px] font-medium text-danger hover:bg-danger/25 disabled:opacity-60"
-        >
-          <Ban className="h-4 w-4" />
-          Revoke Access
-        </button>
-        <button
-          type="button"
-          onClick={() => trigger('SEND_FOR_REVIEW')}
-          disabled={loading !== null}
-          className="flex flex-col items-center gap-1 rounded-lg border border-amber-500/70 bg-amber-500/15 px-2 py-2 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 disabled:opacity-60"
-        >
-          <ClipboardList className="h-4 w-4" />
-          Send for Review
-        </button>
-        <button
-          type="button"
-          onClick={() => trigger('IGNORE')}
-          disabled={loading !== null}
-          className="flex flex-col items-center gap-1 rounded-lg border border-emerald-500/70 bg-emerald-500/10 px-2 py-2 text-[11px] font-medium text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-60"
-        >
-          <ThumbsUp className="h-4 w-4" />
-          Ignore (Override)
-        </button>
-      </div>
-      <div className="mt-1 text-[11px] text-slate-400">
-        Decision: <span className="font-semibold text-slate-100">{decision.outcome}</span> (
-        {Math.round(decision.confidence * 100)}% confidence, LLM:{' '}
-        {decision.usedLLM ? 'enabled' : 'heuristic only'}).
-      </div>
-      <textarea
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Optional justification when overriding the decision. This is stored in the remediation log."
-        className="mt-1 h-16 w-full rounded-md border border-slate-700 bg-slate-950/70 px-2 py-1 text-[11px] text-slate-100 placeholder:text-slate-500 focus:border-accent focus:outline-none"
-      />
-      {error && <div className="text-[11px] text-danger">{error}</div>}
-    </div>
-  );
+export const RemediationActions:React.FC<{viewModel:IdentityViewModel|null;onActionCompleted?:()=>void}>=({viewModel,onActionCompleted})=>{
+ const [loading,setLoading]=useState<string|null>(null); const [error,setError]=useState<string|null>(null); const [reason,setReason]=useState('');
+ if(!viewModel)return null;
+ const decision=viewModel.decision;
+ async function trigger(action:'REVOKE_ACCESS'|'SEND_FOR_REVIEW'|'IGNORE'){try{setLoading(action);setError(null);await performRemediationAction({identityId:viewModel.identity.id,action,decisionOutcome:decision.outcome,reason:action==='IGNORE'?(reason||'Explicit human override'):undefined});onActionCompleted?.();}catch{setError('Could not apply the remediation action.')}finally{setLoading(null);}}
+ return <div className="rounded-xl border border-white/[0.08] bg-[#0b0c0f] p-5"><div className="flex items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-[.14em] text-white/25">Remediation</div><h3 className="mt-1 text-[14px] font-medium">Close the gap</h3><p className="mt-1 text-[11px] text-white/28">Apply or override the current decision while preserving an audit trail.</p></div><ArrowRight className="mt-1 h-4 w-4 text-white/20"/></div>
+  <div className="mt-5 grid gap-2 md:grid-cols-3"><Action onClick={()=>trigger('REVOKE_ACCESS')} disabled={!!loading} icon={<Ban/>} label="Revoke access" tone="danger"/><Action onClick={()=>trigger('SEND_FOR_REVIEW')} disabled={!!loading} icon={<ClipboardList/>} label="Send for review" tone="warn"/><Action onClick={()=>trigger('IGNORE')} disabled={!!loading} icon={<ThumbsUp/>} label="Override decision" tone="safe"/></div>
+  <div className="mt-4 flex flex-wrap gap-4 text-[10px] text-white/25"><span>Outcome: <b className="text-white/55">{decision.outcome}</b></span><span>Confidence: <b className="text-white/55">{Math.round(decision.confidence*100)}%</b></span><span>Engine: <b className="text-white/55">{decision.usedLLM?'LLM-assisted':'heuristic'}</b></span></div>
+  <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Optional justification for an override..." className="mt-4 h-16 w-full resize-none rounded-md border border-white/[0.09] bg-white/[0.025] px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/20 focus:border-white/20"/>
+  {error&&<div className="mt-2 text-[11px] text-red-300">{error}</div>}
+ </div>;
 };
-
+function Action({onClick,disabled,icon,label,tone}:{onClick:()=>void;disabled:boolean;icon:React.ReactNode;label:string;tone:'danger'|'warn'|'safe'}){const cls=tone==='danger'?'border-red-400/20 bg-red-400/[0.04] text-red-300 hover:bg-red-400/[0.08]':tone==='warn'?'border-amber-400/20 bg-amber-400/[0.04] text-amber-300 hover:bg-amber-400/[0.08]':'border-emerald-400/20 bg-emerald-400/[0.04] text-emerald-300 hover:bg-emerald-400/[0.08]';return <button onClick={onClick} disabled={disabled} className={'flex h-11 items-center justify-center gap-2 rounded-md border text-[11px] font-medium transition disabled:opacity-40 '+cls}>{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}{loadingLabel(disabled,label)}</button>}
+function loadingLabel(disabled:boolean,label:string){return disabled?'Working...':label}
