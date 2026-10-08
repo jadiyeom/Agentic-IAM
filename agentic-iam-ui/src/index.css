@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +7,7 @@
 html { scroll-behavior: smooth; }
 body {
   @apply bg-surface text-slate-100;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter Tight', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @keyframes steerpast-fade-up {
@@ -50,3 +52,18 @@ body {
   .animate-rise,
   .animate-modal { animation: none !important; }
 }
+
+
+/* Steerpast visual system */
+:root { color-scheme: dark; }
+::selection { background: rgba(183,255,73,.22); color: #fff; }
+.landing-page h1, .landing-page h2, .landing-page h3 { text-wrap: balance; }
+.landing-page p, .landing-page li { text-wrap: pretty; }
+.landing-page .surface-lift {
+  border-color: rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(20,21,23,.96), rgba(12,13,15,.96));
+  box-shadow: 0 24px 90px rgba(0,0,0,.28), 0 0 80px rgba(183,255,73,.06);
+}
+.surface-soft { background: linear-gradient(180deg, rgba(17,18,21,.88), rgba(11,12,14,.88)); }
+.landing-page .surface-soft { background: linear-gradient(180deg, rgba(17,18,21,.88), rgba(11,12,14,.88)); }
+.landing-page .lime-ring:focus-visible { outline: 2px solid rgba(183,255,73,.75); outline-offset: 3px; }
