@@ -31,7 +31,7 @@ export const Company: React.FC = () => (
       </div>
     </div>
 
-    <div className="mt-4 rounded-2xl border border-[#b7ff49]/15 bg-[#b7ff49]/[0.025] p-7">
+    <div id="contact" className="mt-4 rounded-2xl border border-[#b7ff49]/15 bg-[#b7ff49]/[0.025] p-7">
       <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-[#b7ff49]"/><h2 className="text-[15px] font-medium">Talk to Steerpast</h2></div>
       <p className="mt-3 text-[12px] leading-6 text-white/30">For product discussions, pilots, security questions, or partnership conversations, contact the team through the company-domain email.</p>
       <a href={contactHref} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#b7ff49] px-4 py-2 text-[12px] font-semibold text-[#08090a]">Contact us <ArrowUpRight className="h-3.5 w-3.5"/></a>
