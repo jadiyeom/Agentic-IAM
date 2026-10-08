@@ -44,3 +44,6 @@ npm run dev
 
 Set `OPENAI_API_KEY` in `agentic-iam-backend/.env` to enable LLM-backed decisioning and explainability; without it the system falls back to deterministic heuristics while preserving the same JSON contracts.
 
+### Vercel demo
+
+The project also includes a Vercel-ready frontend and serverless API entrypoint for the hosted demo.
