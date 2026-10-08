@@ -19,7 +19,7 @@ export const Company: React.FC = () => (
       <div className="rounded-2xl border border-white/[0.08] bg-white/[0.015] p-7">
         <div className="text-[10px] uppercase tracking-[0.16em] text-white/22">Current stage</div>
         <h2 className="mt-5 text-[18px] font-medium">Early access / validation</h2>
-        <p className="mt-4 text-[12px] leading-6 text-white/30">The public environment is a product demonstration and evaluation surface. Customer traction, funding, legal entity details, and formal compliance claims are intentionally not invented on the website.</p>
+        <p className="mt-4 text-[12px] leading-6 text-white/30">The public environment is a product demonstration and evaluation surface. The site focuses on verifiable product, architecture, and implementation evidence while the business is in early validation.</p>
       </div>
     </div>
 
