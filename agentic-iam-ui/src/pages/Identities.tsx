@@ -89,7 +89,7 @@ export const Identities: React.FC = () => {
               <div className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.045]"><Users className="h-5 w-5 text-white/60" /></div>
               <div>
                 <h1 className="text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">Identities</h1>
-                <p className="mt-1 text-[13px] text-white/40">Human, service, and agent identities evaluated by TrustLens.</p>
+                <p className="mt-1 text-[13px] text-white/40">Human, service, and agent identities evaluated by Steerpast IAM.</p>
               </div>
             </div>
           </div>
@@ -111,7 +111,7 @@ export const Identities: React.FC = () => {
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search identities..." className="h-10 w-full rounded-md border border-white/[0.1] bg-white/[0.035] pl-9 pr-3 text-[13px] text-white outline-none transition placeholder:text-white/25 focus:border-white/20 focus:bg-white/[0.05]" />
             </div>
             <div className="flex flex-wrap gap-2">
-              <select value={department} onChange={e => setDepartment(e.target.value)} className="h-10 rounded-md border border-white/[0.1] bg-[#0d0e11] px-3 text-[13px] text-white/75 outline-none">
+              <select value={department} onChange={e => setDepartment(e.target.value)} className="h-10 appearance-none rounded-[7px] border border-white/[0.1] bg-[#0d0e11] px-3 text-[13px] text-white/75 outline-none [color-scheme:dark] focus:border-[#b7ff49]/40 focus:ring-1 focus:ring-[#b7ff49]/15">
                 <option value="">All departments</option>
                 {departments.map(dep => <option key={dep} value={dep}>{dep}</option>)}
               </select>
@@ -173,5 +173,5 @@ function Field({label,value,onChange,placeholder}:{label:string;value:string;onC
   return <label className="block"><span className="mb-1.5 block text-[11px] font-medium text-white/45">{label}</span><input required value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="h-10 w-full rounded-md border border-white/10 bg-white/[0.035] px-3 text-[13px] text-white outline-none placeholder:text-white/20 focus:border-white/20" /></label>;
 }
 function SelectField({label,value,onChange,options}:{label:string;value:string;onChange:(v:string)=>void;options:string[]}) {
-  return <label className="block"><span className="mb-1.5 block text-[11px] font-medium text-white/45">{label}</span><select value={value} onChange={e=>onChange(e.target.value)} className="h-10 w-full rounded-md border border-white/10 bg-white/[0.035] px-3 text-[13px] text-white outline-none">{options.map(x=><option key={x} value={x}>{x.replace('_',' ')}</option>)}</select></label>;
+  return <label className="block"><span className="mb-1.5 block text-[11px] font-medium text-white/45">{label}</span><select value={value} onChange={e=>onChange(e.target.value)} className="h-10 w-full rounded-[7px] border border-white/10 bg-white/[0.035] px-3 text-[13px] text-white outline-none [color-scheme:dark] focus:border-[#b7ff49]/40 focus:ring-1 focus:ring-[#b7ff49]/15">{options.map(x=><option key={x} value={x}>{x.replace('_',' ')}</option>)}</select></label>;
 }
