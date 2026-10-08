@@ -5,7 +5,7 @@ import { ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTria
 const demo = () => localStorage.setItem('trustlens-iam-auth', 'true');
 
 export const Landing: React.FC = () => (
-  <div className="min-h-screen bg-[#08090b] text-[#f7f7f8] selection:bg-white/20">
+  <div className="landing-page min-h-screen bg-[#08090b] text-[#f7f7f8] selection:bg-white/20">
     <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#08090b]/85 backdrop-blur-xl">
       <nav className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-5 lg:px-8">
         <a href="#" className="flex items-center gap-2.5 text-[15px] font-semibold">
@@ -28,7 +28,7 @@ export const Landing: React.FC = () => (
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[620px] bg-[radial-gradient(ellipse_at_top,rgba(120,119,255,0.12),transparent_62%)]" />
         <div className="relative mx-auto max-w-[1180px] px-5 pb-28 pt-28 text-center lg:px-8 lg:pt-36">
-          <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[12px] text-white/60">
+          <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[13px] text-white/60">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]" />Identity security for the agentic era
           </div>
           <h1 className="mx-auto max-w-4xl text-[48px] font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl lg:text-[76px]">
@@ -44,23 +44,23 @@ export const Landing: React.FC = () => (
             <a href="#product" className="inline-flex h-11 items-center rounded-lg border border-white/10 px-5 text-[14px] font-medium text-white/65 hover:border-white/20 hover:text-white">Explore the product</a>
           </div>
 
-          <div className="mx-auto mt-20 max-w-5xl overflow-hidden rounded-xl border border-white/10 bg-[#0d0e11] text-left shadow-[0_40px_120px_rgba(0,0,0,.5)]">
+          <div className="product-preview mx-auto mt-20 max-w-5xl overflow-hidden rounded-xl border border-white/10 bg-[#0d0e11] text-left shadow-[0_40px_120px_rgba(0,0,0,.5)]">
             <div className="flex h-10 items-center gap-2 border-b border-white/[0.07] px-4">
               <span className="h-2 w-2 rounded-full bg-white/15" /><span className="h-2 w-2 rounded-full bg-white/15" /><span className="h-2 w-2 rounded-full bg-white/15" />
-              <span className="ml-3 text-[11px] text-white/30">TrustLens / Security overview</span>
+              <span className="ml-3 text-[12px] text-white/30">TrustLens / Security overview</span>
             </div>
             <div className="grid min-h-[350px] md:grid-cols-[190px_1fr]">
               <aside className="hidden border-r border-white/[0.06] p-4 md:block">
-                <div className="mb-5 text-[11px] font-semibold text-white/75">TrustLens</div>
+                <div className="mb-5 text-[12px] font-semibold text-white/75">TrustLens</div>
                 {['Overview','Identities','Entitlements','Audit trail','System'].map((x,i) => (
-                  <div key={x} className={`mb-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-[11px] ${i===0?'bg-white/[0.08] text-white':'text-white/35'}`}>
+                  <div key={x} className={`mb-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-[12px] ${i===0?'bg-white/[0.08] text-white':'text-white/35'}`}>
                     <span className="h-1.5 w-1.5 rounded-full bg-current" />{x}
                   </div>
                 ))}
               </aside>
               <div className="p-5 md:p-7">
                 <div className="flex items-start justify-between">
-                  <div><div className="text-[11px] text-white/35">Security overview</div><div className="mt-1 text-lg font-medium">Access posture</div></div>
+                  <div><div className="text-[12px] text-white/35">Security overview</div><div className="mt-1 text-lg font-medium">Access posture</div></div>
                   <div className="rounded-md border border-emerald-400/20 bg-emerald-400/[0.06] px-2.5 py-1 text-[10px] text-emerald-300">Monitoring active</div>
                 </div>
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -77,7 +77,7 @@ export const Landing: React.FC = () => (
                       ['support-agent','customer.export','Step-up required','amber']
                     ].map(([a,b,c,color]) => (
                       <div key={a} className="mt-4 flex items-center justify-between border-t border-white/[0.05] pt-3">
-                        <div><div className="text-[11px] text-white/75">{a}</div><div className="mt-1 text-[10px] text-white/30">{b}</div></div>
+                        <div><div className="text-[12px] text-white/75">{a}</div><div className="mt-1 text-[10px] text-white/30">{b}</div></div>
                         <span className={`text-[10px] ${color==='red'?'text-red-300':color==='green'?'text-emerald-300':'text-amber-300'}`}>{c}</span>
                       </div>
                     ))}
@@ -128,8 +128,8 @@ export const Landing: React.FC = () => (
               ['05','Act','RemediationAgent','Recommend or execute the next safe action.']
             ].map(([n,t,a,d]) => (
               <div key={n} className="bg-[#0b0c0f] p-6 md:min-h-[245px]">
-                <div className="text-[11px] text-white/25">{n}</div><div className="mt-12 text-[15px] font-medium">{t}</div>
-                <div className="mt-2 font-mono text-[10px] text-white/35">{a}</div><p className="mt-4 text-[12px] leading-5 text-white/40">{d}</p>
+                <div className="text-[12px] text-white/25">{n}</div><div className="mt-12 text-[15px] font-medium">{t}</div>
+                <div className="mt-2 font-mono text-[10px] text-white/35">{a}</div><p className="mt-4 text-[13px] leading-5 text-white/40">{d}</p>
               </div>
             ))}
           </div>
@@ -139,13 +139,13 @@ export const Landing: React.FC = () => (
       <section className="mx-auto max-w-[1180px] px-5 py-32 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-[.8fr_1.2fr] lg:items-center">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">A concrete decision</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/35">A concrete decision</p>
             <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">An intern gets production admin access.</h2>
             <p className="mt-6 text-[15px] leading-7 text-white/45">This is where traditional IAM dashboards stop. TrustLens follows the access change all the way through to a security decision.</p>
             <Link to="/identities" onClick={demo} className="mt-8 inline-flex items-center gap-2 text-[13px] font-medium text-white hover:text-white/70">Open this scenario <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#0b0c0f]">
-            <div className="border-b border-white/[0.07] px-5 py-4 text-[11px] text-white/35">Decision trace · 14:32:08 UTC</div>
+            <div className="border-b border-white/[0.07] px-5 py-4 text-[12px] text-white/35">Decision trace · 14:32:08 UTC</div>
             <div className="space-y-0 px-5">
               <Trace icon={<Bot />} label="Identity" value="deployment-intern" detail="Human identity · Engineering · Intern" />
               <Trace icon={<KeyRound />} label="Access change" value="production-db.admin" detail="New privileged entitlement detected" />
@@ -171,7 +171,7 @@ export const Landing: React.FC = () => (
 
       <section className="mx-auto max-w-[1180px] px-5 py-32 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-2">
-          <div><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">Why TrustLens</p><h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em]">IAM tells you what exists. TrustLens tells you what should happen.</h2></div>
+          <div><p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/35">Why TrustLens</p><h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em]">IAM tells you what exists. TrustLens tells you what should happen.</h2></div>
           <div className="space-y-9">
             <Reason title="Context over alerts" text="Access decisions combine identity, entitlement, sensitivity, policy, and risk context instead of producing another disconnected alert queue." />
             <Reason title="Agents are first-class" text="AI agents increasingly operate with credentials and permissions. TrustLens treats them as identities that need ownership, policy, and accountability." />
@@ -190,7 +190,7 @@ export const Landing: React.FC = () => (
               ['DecisionAgent','Explainable final decision'],['RemediationAgent','Safe corrective action'],['AuditAgent','Evidence + decision history']
             ].map(([a,b],i)=>(
               <div key={a} className="flex items-start gap-4 rounded-lg border border-white/[0.07] bg-white/[0.018] p-5">
-                <span className="font-mono text-[10px] text-white/25">0{i+1}</span><div><div className="text-[13px] font-medium">{a}</div><div className="mt-1 text-[11px] text-white/35">{b}</div></div>
+                <span className="font-mono text-[10px] text-white/25">0{i+1}</span><div><div className="text-[13px] font-medium">{a}</div><div className="mt-1 text-[12px] text-white/35">{b}</div></div>
               </div>
             ))}
           </div>
@@ -217,7 +217,7 @@ export const Landing: React.FC = () => (
     </main>
 
     <footer className="border-t border-white/[0.07]">
-      <div className="mx-auto flex max-w-[1180px] flex-col gap-4 px-5 py-8 text-[12px] text-white/30 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-4 px-5 py-8 text-[13px] text-white/30 sm:flex-row sm:items-center sm:justify-between lg:px-8">
         <div className="flex items-center gap-2 text-white/55"><ShieldCheck className="h-4 w-4" />TrustLens</div><div>Agentic identity security · Early access</div>
       </div>
     </footer>
@@ -225,19 +225,19 @@ export const Landing: React.FC = () => (
 );
 
 function SectionIntro({eyebrow,title,text}:{eyebrow:string;title:string;text?:string}) {
-  return <div className="max-w-2xl"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">{eyebrow}</p><h2 className="mt-4 text-4xl font-semibold leading-tight tracking-[-0.045em] sm:text-5xl">{title}</h2>{text && <p className="mt-5 text-[15px] leading-7 text-white/45">{text}</p>}</div>;
+  return <div className="max-w-2xl"><p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/35">{eyebrow}</p><h2 className="mt-4 text-4xl font-semibold leading-tight tracking-[-0.045em] sm:text-5xl">{title}</h2>{text && <p className="mt-5 text-[15px] leading-7 text-white/45">{text}</p>}</div>;
 }
 function Metric({label,value,delta,danger}:{label:string;value:string;delta:string;danger?:boolean}) {
   return <div className="rounded-lg border border-white/[0.07] bg-white/[0.018] p-4"><div className="text-[10px] text-white/35">{label}</div><div className={`mt-2 text-xl font-medium ${danger?'text-red-300':'text-white'}`}>{value}</div><div className="mt-1 text-[9px] text-white/25">{delta}</div></div>;
 }
 function Stat({icon,title,text}:{icon:React.ReactNode;title:string;text:string}) {
-  return <div className="flex gap-3"><span className="text-white/45">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4'})}</span><div><div className="text-[13px] font-medium">{title}</div><p className="mt-1 text-[12px] leading-5 text-white/35">{text}</p></div></div>;
+  return <div className="flex gap-3"><span className="text-white/45">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4'})}</span><div><div className="text-[13px] font-medium">{title}</div><p className="mt-1 text-[13px] leading-5 text-white/35">{text}</p></div></div>;
 }
 function ProductRow({number,icon,title,text,items}:{number:string;icon:React.ReactNode;title:string;text:string;items:string[]}) {
-  return <div className="grid gap-8 py-12 md:grid-cols-[70px_1fr_1fr] md:items-start"><div className="font-mono text-[11px] text-white/25">{number}</div><div><div className="flex items-center gap-3"><span className="text-white/50">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4'})}</span><h3 className="text-lg font-medium">{title}</h3></div><p className="mt-4 max-w-xl text-[14px] leading-6 text-white/42">{text}</p></div><div className="md:pt-1">{items.map(x=><div key={x} className="flex gap-2 border-b border-white/[0.05] py-2.5 text-[12px] text-white/45"><ChevronRight className="mt-0.5 h-3 w-3 text-white/25" />{x}</div>)}</div></div>;
+  return <div className="grid gap-8 py-12 md:grid-cols-[70px_1fr_1fr] md:items-start"><div className="font-mono text-[12px] text-white/25">{number}</div><div><div className="flex items-center gap-3"><span className="text-white/50">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4'})}</span><h3 className="text-lg font-medium">{title}</h3></div><p className="mt-4 max-w-xl text-[14px] leading-6 text-white/42">{text}</p></div><div className="md:pt-1">{items.map(x=><div key={x} className="flex gap-2 border-b border-white/[0.05] py-2.5 text-[13px] text-white/45"><ChevronRight className="mt-0.5 h-3 w-3 text-white/25" />{x}</div>)}</div></div>;
 }
 function Trace({icon,label,value,detail,last}:{icon:React.ReactNode;label:string;value:string;detail:string;last?:boolean}) {
-  return <div className={`flex gap-4 py-5 ${last?'':'border-b border-white/[0.05]'}`}><div className="mt-0.5 text-white/40">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4'})}</div><div className="min-w-0 flex-1"><div className="text-[10px] uppercase tracking-wider text-white/25">{label}</div><div className="mt-1 text-[13px] font-medium">{value}</div><div className="mt-1 text-[11px] text-white/35">{detail}</div></div></div>;
+  return <div className={`flex gap-4 py-5 ${last?'':'border-b border-white/[0.05]'}`}><div className="mt-0.5 text-white/40">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4'})}</div><div className="min-w-0 flex-1"><div className="text-[10px] uppercase tracking-wider text-white/25">{label}</div><div className="mt-1 text-[13px] font-medium">{value}</div><div className="mt-1 text-[12px] text-white/35">{detail}</div></div></div>;
 }
 function UseCase({icon,title,text}:{icon:React.ReactNode;title:string;text:string}) {
   return <div className="bg-[#0b0c0f] p-8"><div className="text-white/45">{React.cloneElement(icon as React.ReactElement,{className:'h-5 w-5'})}</div><h3 className="mt-10 text-[15px] font-medium">{title}</h3><p className="mt-3 max-w-md text-[13px] leading-6 text-white/40">{text}</p></div>;
@@ -249,7 +249,7 @@ function Price({title,price,suffix,text,items,featured}:{title:string;price:stri
   return <div className={`relative rounded-xl border p-7 ${featured?'border-white/20 bg-white/[0.055]':'border-white/[0.08] bg-white/[0.018]'}`}>
     {featured && <div className="absolute right-5 top-5 rounded-full border border-white/10 px-2 py-1 text-[9px] uppercase tracking-wider text-white/45">Early access</div>}
     <div className="text-[13px] font-medium">{title}</div><div className="mt-7 text-4xl font-semibold tracking-[-0.04em]">{price}<span className="text-sm font-normal text-white/30">{suffix}</span></div>
-    <p className="mt-3 min-h-10 text-[12px] leading-5 text-white/35">{text}</p>
-    <div className="mt-7 border-t border-white/[0.07] pt-5">{items.map(x=><div key={x} className="flex gap-2 py-1.5 text-[11px] text-white/45"><Check className="h-3.5 w-3.5 text-white/45" />{x}</div>)}</div>
+    <p className="mt-3 min-h-10 text-[13px] leading-5 text-white/35">{text}</p>
+    <div className="mt-7 border-t border-white/[0.07] pt-5">{items.map(x=><div key={x} className="flex gap-2 py-1.5 text-[12px] text-white/45"><Check className="h-3.5 w-3.5 text-white/45" />{x}</div>)}</div>
   </div>;
 }
