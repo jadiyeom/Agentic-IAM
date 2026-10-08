@@ -3,6 +3,15 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTriangle, Check, ChevronRight, Database, KeyRound, Sparkles, Fingerprint, Network, ScanSearch } from 'lucide-react';
 
 const demo = () => localStorage.setItem('steerpast-iam-auth','true');
+const contactHref = 'mailto:' + ['omjadiye','steerpast.com'].join('@');
+
+const SteerpastMark = ({className='h-7 w-7'}:{className?:string}) => (
+  <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+    <defs><linearGradient id="steerpast-mark-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f4ffd0"/><stop offset="0.48" stopColor="#b7ff49"/><stop offset="1" stopColor="#00ed4f"/></linearGradient></defs>
+    <path fill="url(#steerpast-mark-gradient)" d="M5 4h31c14 0 23 10 23 24 0 12-7 20-18 24l-1-8c7-3 10-8 10-16 0-8-5-13-14-13H16c-7 0-10 3-11 9V4Z"/>
+    <path fill="#050505" d="M5 28c3-7 8-10 16-10h16c4 0 7 2 7 5s-2 5-7 5H20c-3 0-5 1-5 3 0 2 2 3 6 4l15 5c5 2 8 5 8 9 0 4-3 7-8 9L5 60l26-17c3-2 3-4 0-5l-18-6c-6-2-9-6-8-10v6Z"/>
+  </svg>
+);
 
 const Metric = ({label,value,delta,danger=false}:{label:string;value:string;delta:string;danger?:boolean}) => (
   <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-4">
@@ -40,10 +49,10 @@ export const Landing: React.FC = () => (
     <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#08090b]/82 backdrop-blur-xl">
       <nav className="mx-auto flex h-16 max-w-[1220px] items-center justify-between px-5 lg:px-8">
         <a href="#" className="flex items-center gap-2.5 text-[15px] font-semibold tracking-[-0.02em]">
-          <span className="grid h-7 w-7 place-items-center rounded-md border border-white/15 bg-white/[0.05]"><ShieldCheck className="h-4 w-4"/></span>
+          <SteerpastMark className="h-7 w-7"/>
           Steerpast <span className="text-white/35">IAM</span>
         </a>
-        <div className="hidden items-center gap-7 text-[13px] text-white/48 md:flex"><a href="#product" className="hover:text-white">Product</a><a href="#how-it-works" className="hover:text-white">How it works</a><a href="#scenario" className="hover:text-white">Scenario</a><a href="#architecture" className="hover:text-white">Architecture</a><a href="#pricing" className="hover:text-white">Pricing</a></div>
+        <div className="hidden items-center gap-7 text-[13px] text-white/48 md:flex"><a href="#product" className="hover:text-white">Product</a><a href="#how-it-works" className="hover:text-white">How it works</a><a href="#scenario" className="hover:text-white">Scenario</a><a href="#architecture" className="hover:text-white">Architecture</a><a href="#pricing" className="hover:text-white">Pricing</a><a href={contactHref} className="hover:text-white">Contact us</a></div>
         <Link to="/demo" onClick={demo} className="group inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/[0.06] px-3.5 py-2 text-[13px] font-medium hover:border-white/25 hover:bg-white/[0.1]">View demo <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5"/></Link>
       </nav>
     </header>
@@ -99,11 +108,16 @@ export const Landing: React.FC = () => (
 
       <section className="mx-auto max-w-[1220px] px-5 py-32 lg:px-8"><div className="grid gap-5 md:grid-cols-3">{[['Access reviews','Replace spreadsheet-driven access reviews with continuously evaluated identity context.'],['AI-agent governance','Treat autonomous agents as first-class identities with owners, privileges, and decision history.'],['Privileged access','Surface dangerous access changes before they become silent standing privilege.']].map(([t,d])=><div key={t} className="border-t border-white/[0.1] pt-5"><div className="text-[15px] font-medium">{t}</div><p className="mt-3 text-[13px] leading-6 text-white/35">{d}</p></div>)}</div></section>
 
-      <section id="pricing" className="border-y border-white/[0.07] bg-[#0b0c0f]"><div className="mx-auto max-w-[1220px] px-5 py-32 lg:px-8"><SectionIntro eyebrow="Pricing" title="Start with the control plane. Grow into production." text="A simple entry point for teams exploring continuous identity evaluation, with room for deeper deployment and governance."/><div className="mt-14 grid gap-4 md:grid-cols-3">{[['Free','0','Explore the model',['Identity posture','Decision trace','Local demo'] ],['Pilot','29','per month · early access',['Everything in Free','Agent-aware identities','Remediation controls','Audit evidence'] ],['Enterprise','Custom','deployment & governance',['Policy integrations','Security controls','Support & onboarding']]].map(([name,price,sub,items],i)=><div key={name} className={`rounded-xl border p-7 ${i===1?'border-white/20 bg-white/[0.055]':'border-white/[0.08] bg-white/[0.018]'}`}><div className="text-[13px] font-medium">{name}</div><div className="mt-6 text-4xl font-semibold tracking-[-.04em]">{price==='29'?'$29':price==='0'?'$0':price}</div><div className="mt-1 text-[11px] text-white/25">{sub}</div><ul className="mt-8 space-y-3">{items.map(x=><li key={x} className="flex gap-2 text-[12px] text-white/42"><Check className="mt-0.5 h-3.5 w-3.5 text-white/30"/>{x}</li>)}</ul></div>)}</div></div></section>
+      <section id="pricing" className="border-y border-white/[0.07] bg-[#0b0c0f]"><div className="mx-auto max-w-[1220px] px-5 py-32 lg:px-8"><SectionIntro eyebrow="Pricing" title="Start with the control plane. Grow into production." text="A simple entry point for teams exploring continuous identity evaluation, with room for deeper deployment and governance."/><div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[
+ {name:'Free',price:'$0',sub:'Explore the model',items:['Identity posture','Decision trace','Local demo']},
+ {name:'Pilot',price:'$29',sub:'per month · early access',items:['Everything in Free','Agent-aware identities','Remediation controls','Audit evidence'],featured:true},
+ {name:'Growth',price:'$99',sub:'per month · for growing teams',items:['Everything in Pilot','Advanced policy controls','Team workspaces','Priority support']},
+ {name:'Enterprise',price:'Custom',sub:'deployment & governance',items:['Custom integrations','Security requirements','Deployment support','Volume & SLA planning']}
+].map(t=><div key={t.name} className={`relative rounded-xl border p-7 ${t.featured?'border-white/20 bg-white/[0.055]':'border-white/[0.08] bg-white/[0.018]'}`}>{t.featured&&<div className="absolute right-5 top-5 rounded-full border border-white/10 px-2 py-1 text-[9px] uppercase tracking-wider text-white/45">Popular</div>}<div className="text-[13px] font-medium">{t.name}</div><div className="mt-6 text-4xl font-semibold tracking-[-.04em]">{t.price}</div><div className="mt-1 text-[11px] text-white/25">{t.sub}</div><ul className="mt-8 space-y-3">{t.items.map(x=><li key={x} className="flex gap-2 text-[12px] text-white/42"><Check className="mt-0.5 h-3.5 w-3.5 text-white/30"/>{x}</li>)}</ul></div>)}</div></div></section>
 
       <section className="mx-auto max-w-[1220px] px-5 py-28 text-center lg:px-8"><div className="mx-auto max-w-2xl"><div className="mx-auto grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.04]"><Network className="h-4 w-4 text-white/55"/></div><h2 className="mt-7 text-4xl font-semibold tracking-[-.045em] sm:text-5xl">See the system make a decision.</h2><p className="mt-5 text-[15px] leading-7 text-white/38">Explore the live Steerpast IAM workspace and follow an identity from context to risk to an explainable action.</p><Link to="/demo" onClick={demo} className="mt-8 inline-flex h-11 items-center gap-2 rounded-md bg-white px-5 text-[14px] font-medium text-black hover:bg-white/90">View demo <ArrowRight className="h-4 w-4"/></Link></div></section>
     </main>
-    <footer className="border-t border-white/[0.07]"><div className="mx-auto flex max-w-[1220px] flex-col gap-3 px-5 py-8 text-[11px] text-white/25 sm:flex-row sm:items-center sm:justify-between lg:px-8"><span>Steerpast IAM</span><span>Identity security for systems that can act on their own.</span></div></footer>
+    <footer className="border-t border-white/[0.07]"><div className="mx-auto flex max-w-[1220px] flex-col gap-4 px-5 py-8 text-[11px] text-white/25 sm:flex-row sm:items-center sm:justify-between lg:px-8"><div className="flex items-center gap-2 text-white/55"><SteerpastMark className="h-6 w-6"/>Steerpast IAM</div><div className="flex items-center gap-5"><span>Identity security for systems that can act on their own.</span><a href={contactHref} className="text-white/50 hover:text-white">Contact us</a></div></div></footer>
   </div>
 );
 
