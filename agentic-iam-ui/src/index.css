@@ -7,14 +7,24 @@ body {
   @apply bg-surface text-slate-100;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+
 @keyframes trustlens-fade-up {
   from { opacity: 0; transform: translateY(18px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes trustlens-float {
-  0%,100% { transform: translateY(0); }
+  0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
+@keyframes trustlens-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trustlens-modal {
+  from { opacity: 0; transform: translateY(10px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .landing-page main > section {
   animation: trustlens-fade-up .7s cubic-bezier(.22,1,.36,1) both;
 }
@@ -25,9 +35,18 @@ body {
 .landing-page main > section:nth-child(6) { animation-delay: .30s; }
 .landing-page main > section:nth-child(7) { animation-delay: .36s; }
 .landing-page main > section:nth-child(8) { animation-delay: .42s; }
-.landing-page a, .landing-page button { transition: all .2s ease; }
+.landing-page a,
+.landing-page button { transition: all .2s ease; }
 .landing-page .product-preview { animation: trustlens-float 6s ease-in-out infinite; }
+.landing-page .product-preview:hover { box-shadow: 0 40px 120px rgba(0,0,0,.58); }
+
+.animate-rise { animation: trustlens-rise .55s cubic-bezier(.22,1,.36,1) both; }
+.animate-modal { animation: trustlens-modal .24s cubic-bezier(.22,1,.36,1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .landing-page main > section, .landing-page .product-preview { animation: none !important; }
+  .landing-page main > section,
+  .landing-page .product-preview,
+  .animate-rise,
+  .animate-modal { animation: none !important; }
 }

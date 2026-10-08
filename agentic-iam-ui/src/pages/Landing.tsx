@@ -18,7 +18,7 @@ export const Landing: React.FC = () => (
           <a href="#use-cases" className="hover:text-white">Use cases</a>
           <a href="#pricing" className="hover:text-white">Pricing</a>
         </div>
-        <Link to="/identities" onClick={demo} className="group inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-3.5 py-2 text-[13px] font-medium hover:border-white/25 hover:bg-white/[0.1]">
+        <Link to="/demo" onClick={demo} className="group inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-3.5 py-2 text-[13px] font-medium hover:border-white/25 hover:bg-white/[0.1]">
           View demo <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
         </Link>
       </nav>
@@ -38,7 +38,7 @@ export const Landing: React.FC = () => (
             TrustLens gives security teams a live map of human and AI-agent access, evaluates risky changes, explains decisions, and turns findings into auditable remediation.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link to="/identities" onClick={demo} className="group inline-flex h-11 items-center gap-2 rounded-lg bg-white px-5 text-[14px] font-medium text-black shadow-[0_0_30px_rgba(255,255,255,.08)] hover:bg-white/90">
+            <Link to="/demo" onClick={demo} className="group inline-flex h-11 items-center gap-2 rounded-lg bg-white px-5 text-[14px] font-medium text-black shadow-[0_0_30px_rgba(255,255,255,.08)] hover:bg-white/90">
               View demo <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
             <a href="#product" className="inline-flex h-11 items-center rounded-lg border border-white/10 px-5 text-[14px] font-medium text-white/65 hover:border-white/20 hover:text-white">Explore the product</a>
@@ -142,7 +142,7 @@ export const Landing: React.FC = () => (
             <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/35">A concrete decision</p>
             <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">An intern gets production admin access.</h2>
             <p className="mt-6 text-[15px] leading-7 text-white/45">This is where traditional IAM dashboards stop. TrustLens follows the access change all the way through to a security decision.</p>
-            <Link to="/identities" onClick={demo} className="mt-8 inline-flex items-center gap-2 text-[13px] font-medium text-white hover:text-white/70">Open this scenario <ArrowRight className="h-4 w-4" /></Link>
+            <Link to="/demo" onClick={demo} className="mt-8 inline-flex items-center gap-2 text-[13px] font-medium text-white hover:text-white/70">Open this scenario <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#0b0c0f]">
             <div className="border-b border-white/[0.07] px-5 py-4 text-[12px] text-white/35">Decision trace · 14:32:08 UTC</div>
@@ -211,7 +211,7 @@ export const Landing: React.FC = () => (
           <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.04]"><ShieldCheck className="h-5 w-5" /></div>
           <h2 className="mt-7 text-4xl font-semibold tracking-[-0.045em] sm:text-6xl">Make every identity decision explainable.</h2>
           <p className="mx-auto mt-6 max-w-xl text-[15px] leading-7 text-white/45">See the product in action with a realistic access-risk scenario. No signup required.</p>
-          <Link to="/identities" onClick={demo} className="mt-9 inline-flex h-11 items-center gap-2 rounded-lg bg-white px-5 text-[14px] font-medium text-black hover:bg-white/90">View demo <ArrowRight className="h-4 w-4" /></Link>
+          <Link to="/demo" onClick={demo} className="mt-9 inline-flex h-11 items-center gap-2 rounded-lg bg-white px-5 text-[14px] font-medium text-black hover:bg-white/90">View demo <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </section>
     </main>
