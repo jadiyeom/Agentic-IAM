@@ -13,7 +13,8 @@ const SteerpastMark = ({className='h-7 w-7'}:{className?:string}) => (
   </svg>
 );
 
-const faqItems = [\n  ['Where does Claude fit?', 'Claude can power the model-backed DecisionAgent. Deterministic risk and policy signals are collected first, the model returns an outcome, rationale, and confidence, and the response is validated before entering remediation.'],
+const faqItems = [
+  ['Where does Claude fit?', 'Claude can power the model-backed DecisionAgent. Deterministic risk and policy signals are collected first, the model returns an outcome, rationale, and confidence, and the response is validated before entering remediation.'],
   ['What is Steerpast IAM?', 'Steerpast IAM is an identity security control plane for human, service, and AI-agent identities. It connects identity context, risk, policy evaluation, decisioning, remediation, and audit evidence in one workflow.'],
   ['Does Steerpast IAM treat AI agents differently from users?', 'Agents are first-class identities. Steerpast tracks their owner, role, entitlements, environment, and behavior so autonomous access can be evaluated with the same accountability as human access.'],
   ['How does a security decision get made?', 'IdentityAgent gathers context, RiskAgent evaluates risk, PolicyAgent checks constraints, and DecisionAgent synthesizes the result. The system can then recommend remediation while retaining the evidence behind the decision.'],
@@ -149,7 +150,8 @@ export const Landing: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>\n        <section id="how-it-works" className="border-y border-white/[0.08] bg-[#0b0c0d]">
+        </section>
+        <section id="how-it-works" className="border-y border-white/[0.08] bg-[#0b0c0d]">
           <div className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
             <SectionIntro eyebrow="How it works" title="Set the context. Let the system follow the decision." text="Five focused steps connect an access event to an accountable outcome."/>
             <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] md:grid-cols-5">
@@ -211,7 +213,8 @@ export const Landing: React.FC = () => {
             ].map(([title,text])=><div key={title} className="bg-[#0b0c0d] p-6"><div className="text-[13px] font-medium">{title}</div><p className="mt-3 text-[11px] leading-5 text-white/28">{text}</p></div>)}
           </div>
           <Link to="/security" className="mt-8 inline-flex items-center gap-2 text-[12px] text-white/45 hover:text-white">Read the security model <ArrowUpRight className="h-3.5 w-3.5"/></Link>
-        </section>\n        <section id="pricing" className="border-y border-white/[0.08] bg-[#0b0c0d]">
+        </section>
+        <section id="pricing" className="border-y border-white/[0.08] bg-[#0b0c0d]">
           <div className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
             <SectionIntro eyebrow="Pricing" title="Start small. Grow when the workflow proves itself." text="Simple early-access pricing while the product is being validated with security teams."/>
             <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
