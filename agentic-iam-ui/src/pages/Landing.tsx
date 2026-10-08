@@ -228,9 +228,13 @@ export const Landing: React.FC = () => {
                 <div className="grid gap-3">
                   {[
                     ['RemediationAgent','Action loop','What closes the gap?',GitBranch],
-                    ['AuditAgent','Evidence trail','Can it be reconstructed?',Database],
-                    ['Claude','Model reasoning','Where context needs synthesis.',Cpu]
+                    ['AuditAgent','Evidence trail','Can it be reconstructed?',Database]
                   ].map(([name,sub,text,Icon])=>{const I=Icon as React.ElementType; return <div key={name as string} className="rounded-xl border border-white/[0.07] bg-[#0b0c0d] p-5 transition hover:border-white/15 hover:bg-white/[0.035]"><div className="flex items-center gap-3"><I className="h-4 w-4 text-white/50"/><span className="font-mono text-[11px] text-white/65">{name as string}</span></div><div className="mt-2 text-[13px] font-medium">{sub as string}</div><p className="mt-1.5 text-[12px] leading-5 text-white/35">{text as string}</p></div>})}
+                  <div className="rounded-xl border border-[#b7ff49]/15 bg-[#b7ff49]/[0.025] p-4">
+                    <div className="flex items-center gap-3"><Cpu className="h-4 w-4 text-[#b7ff49]"/><span className="font-mono text-[11px] text-white/65">Claude</span></div>
+                    <div className="mt-2 text-[12px] font-medium text-white/65">Model reasoning</div>
+                    <p className="mt-1.5 text-[11px] leading-5 text-white/35">Optional provider at the DecisionAgent boundary.</p>
+                  </div>
                 </div>
               </div>
             </div>
