@@ -4,7 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Identities } from './pages/Identities';
 import { ExplainAudit } from './pages/ExplainAudit';
 import { SystemMetrics } from './pages/SystemMetrics';
-import { Login } from './pages/Login';
+import { Landing } from './pages/Landing';
 import Entitlements from './pages/Entitlements';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -45,7 +45,7 @@ const App: React.FC = () => {
     <Router>
       <div className="min-h-screen bg-slate-950">
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Landing />} />
           <Route
             path="/*"
             element={
