@@ -1,14 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "services": {
-    "agentic-iam-backend": {
-      "root": "agentic-iam-backend",
-      "framework": "express"
-    },
-    "agentic-iam-ui": {
-      "root": "agentic-iam-ui",
-      "framework": "vite"
+  "buildCommand": "npm run build",
+  "outputDirectory": "agentic-iam-ui/dist",
+  "installCommand": "npm install && npm install --prefix agentic-iam-ui && npm install --prefix agentic-iam-backend",
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs24.x",
+      "maxDuration": 30
     }
   },
-  "rewrites": []
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index" },
+    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
+  ]
 }
