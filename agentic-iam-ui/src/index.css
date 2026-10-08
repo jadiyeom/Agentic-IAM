@@ -31,3 +31,31 @@ body {
   html { scroll-behavior: auto; }
   .landing-page main > section, .landing-page .product-preview { animation: none !important; }
 }
+
+@keyframes trustlens-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trustlens-modal {
+  from { opacity: 0; transform: translateY(10px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-rise { animation: trustlens-rise .55s cubic-bezier(.22,1,.36,1) both; }
+.animate-modal { animation: trustlens-modal .24s cubic-bezier(.22,1,.36,1) both; }
+.landing-page main > section {
+  animation: trustlens-fade-up .7s cubic-bezier(.22,1,.36,1) both;
+}
+.landing-page main > section:nth-child(2) { animation-delay: .06s; }
+.landing-page main > section:nth-child(3) { animation-delay: .12s; }
+.landing-page main > section:nth-child(4) { animation-delay: .18s; }
+.landing-page main > section:nth-child(5) { animation-delay: .24s; }
+.landing-page main > section:nth-child(6) { animation-delay: .30s; }
+.landing-page main > section:nth-child(7) { animation-delay: .36s; }
+.landing-page main > section:nth-child(8) { animation-delay: .42s; }
+.landing-page .product-preview { animation: trustlens-float 6s ease-in-out infinite; }
+.landing-page .product-preview > div { transition: border-color .25s ease, box-shadow .25s ease; }
+.landing-page .product-preview:hover { box-shadow: 0 40px 120px rgba(0,0,0,.58); }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .landing-page main > section, .landing-page .product-preview, .animate-rise, .animate-modal { animation: none !important; }
+}
