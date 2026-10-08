@@ -2,7 +2,9 @@
   "name": "trustlens-iam",
   "private": true,
   "version": "1.0.0",
-  "engines": { "node": "24.x" },
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "build": "npm --prefix agentic-iam-ui run build",
     "build:backend": "npm --prefix agentic-iam-backend run build"
@@ -11,7 +13,8 @@
     "@anthropic-ai/sdk": "^0.68.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
