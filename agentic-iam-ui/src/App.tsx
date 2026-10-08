@@ -10,7 +10,7 @@ import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Command } from '
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isAuthed = localStorage.getItem('steerpast-iam-auth') === 'true';
-  if (!isAuthed) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthed) return <Navigate to="/" state={{ from: location }} replace />;
   return <>{children}</>;
 }
 
@@ -29,13 +29,13 @@ const DemoNav: React.FC = () => {
 
   function exit() {
     localStorage.removeItem('steerpast-iam-auth');
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-white/[0.08] bg-[#08090b] lg:flex lg:flex-col">
       <div className="flex h-16 items-center border-b border-white/[0.07] px-5">
-        <button onClick={() => navigate('/login', { replace: true })} className="group flex items-center gap-2.5 text-sm font-semibold text-white">
+        <button onClick={() => navigate('/', { replace: true })} className="group flex items-center gap-2.5 text-sm font-semibold text-white">
           <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/[0.05] transition group-hover:border-white/20 group-hover:bg-white/[0.08]">
             <Command className="h-3.5 w-3.5" />
           </span>
@@ -65,7 +65,7 @@ const DemoNav: React.FC = () => {
       </div>
 
       <div className="mt-auto border-t border-white/[0.07] p-3">
-        <button onClick={() => navigate('/login', { replace: true })} className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-[12px] text-white/50 transition hover:bg-white/[0.045] hover:text-white">
+        <button onClick={() => navigate('/', { replace: true })} className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-[12px] text-white/50 transition hover:bg-white/[0.045] hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           Back to landing
         </button>
@@ -84,7 +84,7 @@ const MobileBar: React.FC = () => (
       <Command className="h-4 w-4" />
       Steerpast IAM
     </button>
-    <Link to="/login" replace className="flex items-center gap-1.5 text-xs text-white/55 hover:text-white">
+    <Link to="/" replace className="flex items-center gap-1.5 text-xs text-white/55 hover:text-white">
       <ArrowLeft className="h-3.5 w-3.5" />
       Landing
     </Link>
@@ -126,7 +126,8 @@ const DemoShell: React.FC = () => {
 const App: React.FC = () => (
   <Router>
     <Routes>
-      <Route path="/login" element={<Landing />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/demo" element={<Navigate to="/identities" replace />} />
       <Route path="/*" element={
         <RequireAuth>
