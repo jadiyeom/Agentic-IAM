@@ -1,20 +1,78 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { fetchIdentities, IdentityViewModel, createIdentity, fetchRoles, Role } from '../services/iamApi';
+import { fetchIdentities, IdentityViewModel, createIdentity, fetchRoles, Role, simulateAnomaly } from '../services/iamApi';
 import { IdentityTable } from '../components/IdentityTable';
+import { IdentityInspector } from '../components/IdentityInspector';
 import { RiskLegend } from '../components/RiskLegend';
-import { ArrowLeft, Plus, Search, SlidersHorizontal, Users, ShieldAlert, CheckCircle2, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { PageHeader, StatCard, riskTier } from '../components/ui';
+import { useSearchParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CheckCircle2, Loader2, MousePointerClick, Play, Plus, Scale, Search, ShieldAlert, Users, X } from 'lucide-react';
+
+const useFocusParam = () => {
+  const [params, setParams] = useSearchParams();
+  const focus = params.get('focus');
+  const clear = () => { params.delete('focus'); setParams(params, { replace: true }); };
+  return [focus, clear] as const;
+};
+
+const useIsWide = () => {
+  const query = '(min-width: 1280px)';
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setWide(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return wide;
+};
 
 export const Identities: React.FC = () => {
-  const navigate = useNavigate();
+  const isWide = useIsWide();
+  const [focus, clearFocus] = useFocusParam();
   const [identities, setIdentities] = useState<IdentityViewModel[]>([]);
+  const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('');
   const [riskLevel, setRiskLevel] = useState('');
-  const [highRiskOnly, setHighRiskOnly] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [simulating, setSimulating] = useState(false);
+  const [toast, setToast] = useState<{ title: string; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  async function runScenario() {
+    // The landing-page story, live: grant an intern production DB admin and watch the agents react.
+    const target = identities.find(x => x.identity.attributes.seniority === 'INTERN' && !x.identity.roles.includes('role-prod-db-admin'));
+    if (!target) {
+      setToast({ title: 'Scenario already applied', text: 'Every intern already holds production DB admin. Reset the demo from ⌘K to run it again.' });
+      return;
+    }
+    setSimulating(true);
+    const started = performance.now();
+    try {
+      const vm = await simulateAnomaly(target.identity.id, 'role-prod-db-admin');
+      const ms = Math.round(performance.now() - started);
+      await refresh();
+      setSelectedId(target.identity.id);
+      setDrawerOpen(true);
+      setToast({
+        title: `${target.identity.name} was granted Production Database Admin`,
+        text: `Risk ${target.risk.riskScore} → ${vm.risk.riskScore}, ${vm.policy.violations.length} policy violation${vm.policy.violations.length === 1 ? '' : 's'}, decision: ${vm.decision.outcome.replace(/_/g, ' ').toLowerCase()}. Round trip ${ms} ms.`,
+      });
+    } catch {
+      setToast({ title: 'Scenario failed', text: 'The API did not respond. Try again in a moment.' });
+    } finally {
+      setSimulating(false);
+    }
+  }
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [newIdentity, setNewIdentity] = useState({
@@ -24,36 +82,57 @@ export const Identities: React.FC = () => {
   const refresh = async () => {
     const ids = await fetchIdentities();
     setIdentities(ids);
-    setSelectedId(current => current && ids.some(x => x.identity.id === current) ? current : ids[0]?.identity.id);
+    setLoading(false);
+    setSelectedId(current => current && ids.some(x => x.identity.id === current) ? current : [...ids].sort((a, b) => b.risk.riskScore - a.risk.riskScore)[0]?.identity.id);
   };
 
   useEffect(() => {
-    refresh();
-    fetchRoles().then(setRoles);
+    refresh().catch(() => setLoading(false));
+    fetchRoles().then(setRoles).catch(() => undefined);
   }, []);
 
-  const departments = useMemo(() => Array.from(new Set(identities.map(i => i.identity.attributes.department))), [identities]);
+  useEffect(() => {
+    if (!focus || !identities.some(x => x.identity.id === focus)) return;
+    setSelectedId(focus);
+    setDrawerOpen(true);
+    clearFocus();
+  }, [focus, identities]);
+
+  useEffect(() => {
+    if (!drawerOpen || isWide) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawerOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawerOpen, isWide]);
+
+  const departments = useMemo(() => Array.from(new Set(identities.map(i => i.identity.attributes.department))).sort(), [identities]);
   const filtered = useMemo(() => identities.filter(vm => {
     const query = search.trim().toLowerCase();
     if (query && !vm.identity.name.toLowerCase().includes(query) && !vm.identity.attributes.title.toLowerCase().includes(query)) return false;
     if (department && vm.identity.attributes.department !== department) return false;
-    if (riskLevel === 'low' && vm.risk.riskScore > 5) return false;
-    if (riskLevel === 'medium' && (vm.risk.riskScore < 6 || vm.risk.riskScore > 12)) return false;
-    if (riskLevel === 'high' && vm.risk.riskScore < 13) return false;
-    if (highRiskOnly && vm.risk.riskScore < 13) return false;
+    const tier = riskTier(vm.risk.riskScore, vm.anomaly);
+    if (riskLevel && tier !== riskLevel) return false;
     return true;
-  }), [identities, search, department, riskLevel, highRiskOnly]);
+  }).sort((a, b) => b.risk.riskScore - a.risk.riskScore), [identities, search, department, riskLevel]);
 
-  const highRisk = identities.filter(x => x.risk.riskScore >= 13 || x.anomaly).length;
+  const highRisk = identities.filter(x => riskTier(x.risk.riskScore, x.anomaly) === 'high').length;
+  const violations = identities.reduce((n, x) => n + x.policy.violations.length, 0);
   const approved = identities.filter(x => String(x.decision.outcome).toUpperCase() === 'APPROVE').length;
+  const needsAction = identities.length - approved;
   const selected = identities.find(x => x.identity.id === selectedId);
+  const filtersActive = Boolean(search || department || riskLevel);
+
+  function select(id: string) {
+    setSelectedId(id);
+    setDrawerOpen(true);
+  }
 
   async function handleCreateIdentity(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
     setCreateError(null);
     try {
-      await createIdentity({
+      const created = await createIdentity({
         name: newIdentity.name,
         attributes: {
           department: newIdentity.department,
@@ -67,6 +146,7 @@ export const Identities: React.FC = () => {
       setShowCreate(false);
       setNewIdentity({ name: '', department: '', title: '', seniority: 'INTERN', employmentType: 'INTERN', location: '', roles: [], entitlements: [] });
       await refresh();
+      if (created?.id) setSelectedId(created.id);
     } catch {
       setCreateError('Failed to create identity.');
     } finally {
@@ -74,76 +154,126 @@ export const Identities: React.FC = () => {
     }
   }
 
-  async function handleDeleteIdentity() { await refresh(); }
-  async function handleRoleAssigned() { await refresh(); }
+  const inspector = selected ? (
+    <IdentityInspector
+      viewModel={selected}
+      roles={roles}
+      onClose={isWide ? undefined : () => setDrawerOpen(false)}
+      onChanged={refresh}
+      onDeleted={async () => { setSelectedId(undefined); setDrawerOpen(false); await refresh(); }}
+    />
+  ) : null;
 
   return (
     <div className="mx-auto max-w-[1480px] px-5 py-7 sm:px-7 lg:px-10 lg:py-9">
       <div className="animate-rise">
-        <div className="flex flex-col gap-5 border-b border-white/[0.08] pb-7 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <button onClick={() => navigate('/login', { replace: true })} className="mb-5 inline-flex items-center gap-2 text-[12px] text-white/40 transition hover:text-white">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to landing
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.045]"><Users className="h-5 w-5 text-white/60" /></div>
-              <div>
-                <h1 className="text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">Identities</h1>
-                <p className="mt-1 text-[13px] text-white/40">Human, service, and agent identities evaluated by Steerpast IAM.</p>
-              </div>
-            </div>
-          </div>
-          <button onClick={() => setShowCreate(true)} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-white px-4 text-[13px] font-medium text-black transition hover:bg-white/90">
-            <Plus className="h-4 w-4" /> Create identity
-          </button>
-        </div>
-
-        <div className="grid gap-3 py-6 sm:grid-cols-3">
-          <Stat label="Total identities" value={String(identities.length)} detail="Currently evaluated" icon={<Users />} />
-          <Stat label="High-risk identities" value={String(highRisk)} detail="Require attention" icon={<ShieldAlert />} danger />
-          <Stat label="Approved decisions" value={String(approved)} detail="Current policy outcomes" icon={<CheckCircle2 />} />
-        </div>
-
-        <div className="border-y border-white/[0.08] py-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="relative min-w-0 flex-1 xl:max-w-md">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search identities..." className="h-10 w-full rounded-md border border-white/[0.1] bg-white/[0.035] pl-9 pr-3 text-[13px] text-white outline-none transition placeholder:text-white/25 focus:border-white/20 focus:bg-white/[0.05]" />
-            </div>
+        <PageHeader
+          eyebrow="Workspace"
+          title="Identities"
+          description="Human, service and agent identities, ranked by risk. Select one to see why the agents decided what they did, and act on it."
+          icon={<Users className="h-5 w-5" />}
+          actions={
             <div className="flex flex-wrap gap-2">
-              <select value={department} onChange={e => setDepartment(e.target.value)} className="h-10 appearance-none rounded-[7px] border border-white/[0.1] bg-[#0d0e11] px-3 text-[13px] text-white/75 outline-none [color-scheme:dark] focus:border-[#b7ff49]/40 focus:ring-1 focus:ring-[#b7ff49]/15">
-                <option value="">All departments</option>
-                {departments.map(dep => <option key={dep} value={dep}>{dep}</option>)}
-              </select>
-              <select value={riskLevel} onChange={e => setRiskLevel(e.target.value)} className="h-10 rounded-md border border-white/[0.1] bg-[#0d0e11] px-3 text-[13px] text-white/75 outline-none">
-                <option value="">All risk levels</option>
-                <option value="low">Low risk</option>
-                <option value="medium">Medium risk</option>
-                <option value="high">High risk</option>
-              </select>
-              <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-white/[0.1] bg-white/[0.025] px-3 text-[12px] text-white/50">
-                <input type="checkbox" checked={highRiskOnly} onChange={e => setHighRiskOnly(e.target.checked)} className="accent-white" />
-                High risk only
-              </label>
-              <div className="hidden items-center gap-2 xl:flex xl:ml-auto"><SlidersHorizontal className="h-3.5 w-3.5 text-white/25" /><RiskLegend /></div>
+              <button onClick={runScenario} disabled={simulating || loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 text-[13px] font-medium text-white/85 transition hover:border-white/25 hover:bg-white/[0.07] disabled:opacity-50">
+                {simulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-current" />} Run the intern scenario
+              </button>
+              <button onClick={() => setShowCreate(true)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#b7ff49] px-4 text-[13px] font-semibold text-[#08090a] transition hover:bg-[#d0ff88]">
+                <Plus className="h-4 w-4" /> Create identity
+              </button>
             </div>
+          }
+        />
+
+        <div className="grid grid-cols-2 gap-3 py-6 lg:grid-cols-4">
+          <StatCard label="Identities" value={loading ? '–' : identities.length} detail="Evaluated by the pipeline" icon={<Users />} />
+          <StatCard label="High risk" value={loading ? '–' : highRisk} detail="Score 50+ or policy breach" icon={<ShieldAlert />} tone={highRisk ? 'danger' : 'default'} />
+          <StatCard label="Policy violations" value={loading ? '–' : violations} detail="Across all identities" icon={<Scale />} />
+          <StatCard label="Needs action" value={loading ? '–' : needsAction} detail={loading ? 'Current decisions' : `${approved} approved as-is`} icon={<CheckCircle2 />} tone={needsAction ? 'lime' : 'default'} />
+        </div>
+
+        <div className="flex flex-col gap-3 pb-5 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1 lg:max-w-sm">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden="true" />
+            <label htmlFor="identity-search" className="sr-only">Search identities</label>
+            <input id="identity-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or title" className="h-10 w-full rounded-full border border-white/[0.1] bg-white/[0.03] pl-10 pr-3 text-[13px] text-white outline-none transition placeholder:text-white/35 focus:border-[#b7ff49]/40 focus:bg-white/[0.05]" />
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="dept-filter" className="sr-only">Department</label>
+            <select id="dept-filter" value={department} onChange={e => setDepartment(e.target.value)} className="h-10 rounded-full border border-white/[0.1] bg-[#0d0e11] px-4 text-[13px] text-white/80 outline-none [color-scheme:dark] focus:border-[#b7ff49]/40">
+              <option value="">All departments</option>
+              {departments.map(dep => <option key={dep} value={dep}>{dep}</option>)}
+            </select>
+            <div role="radiogroup" aria-label="Risk level" className="flex h-10 items-center rounded-full border border-white/[0.1] bg-white/[0.02] p-1 text-[12px]">
+              {[['', 'All'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']].map(([v, l]) => (
+                <button key={l} type="button" role="radio" aria-checked={riskLevel === v} onClick={() => setRiskLevel(v)} className={`h-8 rounded-full px-3 transition ${riskLevel === v ? 'bg-white/[0.1] text-white' : 'text-white/55 hover:text-white'}`}>{l}</button>
+              ))}
+            </div>
+            {filtersActive && (
+              <button type="button" onClick={() => { setSearch(''); setDepartment(''); setRiskLevel(''); }} className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-[12px] text-white/55 hover:text-white">
+                <X className="h-3.5 w-3.5" /> Clear
+              </button>
+            )}
+          </div>
+          <RiskLegend className="hidden lg:ml-auto lg:flex" />
         </div>
 
-        <div className="flex items-center justify-between py-5">
-          <div><div className="text-[13px] font-medium text-white">{filtered.length} identities</div><div className="mt-0.5 text-[12px] text-white/30">Select an identity to inspect its decision context.</div></div>
-          <div className="text-[11px] text-white/25">{selected ? `Selected: ${selected.identity.name}` : 'No selection'}</div>
-        </div>
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="min-w-0">
+            <div className="mb-3 flex items-center justify-between text-[12px] text-white/50">
+              <span><span className="font-medium text-white">{filtered.length}</span> of {identities.length} identities · sorted by risk</span>
+              <span className="hidden items-center gap-1.5 md:flex"><MousePointerClick className="h-3.5 w-3.5" aria-hidden="true" />Select a row to inspect</span>
+            </div>
+            <IdentityTable identities={filtered} selectedId={selectedId} onSelect={select} roles={roles} loading={loading} />
+          </div>
 
-        <IdentityTable identities={filtered} selectedId={selectedId} onSelect={setSelectedId} onDelete={handleDeleteIdentity} roles={roles} onRoleAssigned={handleRoleAssigned} />
+          {isWide && (
+            <aside aria-label="Identity inspector" className="scroll-quiet sticky top-6 max-h-[calc(100vh-48px)] overflow-y-auto rounded-2xl border border-white/[0.08] bg-[#0d0e10]">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div key={selectedId ?? 'none'} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
+                  {inspector ?? <div className="p-8 text-center text-[13px] text-white/50">Select an identity to inspect it.</div>}
+                </motion.div>
+              </AnimatePresence>
+            </aside>
+          )}
+        </div>
       </div>
 
+      {!isWide && drawerOpen && inspector && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setDrawerOpen(false); }}>
+          <aside role="dialog" aria-modal="true" aria-label={`Inspect ${selected?.identity.name}`} className="animate-drawer scroll-quiet h-full w-full max-w-[460px] overflow-y-auto border-l border-white/10 bg-[#0d0e10] shadow-2xl">
+            {inspector}
+          </aside>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            role="status"
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-20 left-1/2 z-[65] w-[min(92vw,460px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[#111216]/95 p-4 shadow-[0_20px_60px_rgba(0,0,0,.6)] backdrop-blur-xl lg:bottom-6"
+          >
+            <div className="flex items-start gap-3">
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#b7ff49] shadow-[0_0_10px_rgba(183,255,73,.8)]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[13px] font-medium text-white">{toast.title}</div>
+                <p className="mt-1 text-[12px] leading-5 text-white/60">{toast.text}</p>
+              </div>
+              <button type="button" aria-label="Dismiss" onClick={() => setToast(null)} className="rounded-md p-1 text-white/45 hover:text-white"><X className="h-3.5 w-3.5" /></button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <form onSubmit={handleCreateIdentity} className="w-full max-w-lg animate-modal overflow-hidden rounded-xl border border-white/10 bg-[#0d0e11] shadow-2xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setShowCreate(false); }}>
+          <form onSubmit={handleCreateIdentity} role="dialog" aria-modal="true" aria-labelledby="create-identity-title" className="w-full max-w-lg animate-modal overflow-hidden rounded-2xl border border-white/10 bg-[#0d0e11] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-5">
-              <div><h2 className="text-base font-semibold">Create identity</h2><p className="mt-1 text-[12px] text-white/35">Add a new identity to the evaluation graph.</p></div>
-              <button type="button" onClick={() => setShowCreate(false)} className="rounded-md p-2 text-white/35 transition hover:bg-white/[0.06] hover:text-white"><X className="h-4 w-4" /></button>
+              <div><h2 id="create-identity-title" className="text-base font-semibold">Create identity</h2><p className="mt-1 text-[12px] text-white/55">Add a new identity to the evaluation graph.</p></div>
+              <button type="button" onClick={() => setShowCreate(false)} aria-label="Close" className="rounded-md p-2 text-white/55 transition hover:bg-white/[0.06] hover:text-white"><X className="h-4 w-4" /></button>
             </div>
             <div className="grid gap-4 p-6 sm:grid-cols-2">
               <Field label="Name" value={newIdentity.name} onChange={v => setNewIdentity({...newIdentity, name:v})} placeholder="e.g. Alex Morgan" />
@@ -165,13 +295,9 @@ export const Identities: React.FC = () => {
   );
 };
 
-function Stat({label,value,detail,icon,danger}:{label:string;value:string;detail:string;icon:React.ReactNode;danger?:boolean}) {
-  return <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-5 transition duration-200 hover:border-white/[0.14] hover:bg-white/[0.03]"><div className="flex items-center justify-between"><span className="text-[12px] text-white/40">{label}</span><span className={danger ? 'text-red-300/70' : 'text-white/30'}>{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4'})}</span></div><div className={`mt-3 text-2xl font-semibold tracking-[-0.03em] ${danger?'text-red-200':'text-white'}`}>{value}</div><div className="mt-1 text-[11px] text-white/25">{detail}</div></div>;
-}
-
 function Field({label,value,onChange,placeholder}:{label:string;value:string;onChange:(v:string)=>void;placeholder:string}) {
-  return <label className="block"><span className="mb-1.5 block text-[11px] font-medium text-white/45">{label}</span><input required value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="h-10 w-full rounded-md border border-white/10 bg-white/[0.035] px-3 text-[13px] text-white outline-none placeholder:text-white/20 focus:border-white/20" /></label>;
+  return <label className="block"><span className="mb-1.5 block text-[11px] font-medium text-white/65">{label}</span><input required value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="h-10 w-full rounded-md border border-white/10 bg-white/[0.035] px-3 text-[13px] text-white outline-none placeholder:text-white/30 focus:border-[#b7ff49]/40" /></label>;
 }
 function SelectField({label,value,onChange,options}:{label:string;value:string;onChange:(v:string)=>void;options:string[]}) {
-  return <label className="block"><span className="mb-1.5 block text-[11px] font-medium text-white/45">{label}</span><select value={value} onChange={e=>onChange(e.target.value)} className="h-10 w-full rounded-[7px] border border-white/10 bg-white/[0.035] px-3 text-[13px] text-white outline-none [color-scheme:dark] focus:border-[#b7ff49]/40 focus:ring-1 focus:ring-[#b7ff49]/15">{options.map(x=><option key={x} value={x}>{x.replace('_',' ')}</option>)}</select></label>;
+  return <label className="block"><span className="mb-1.5 block text-[11px] font-medium text-white/65">{label}</span><select value={value} onChange={e=>onChange(e.target.value)} className="h-10 w-full rounded-[7px] border border-white/10 bg-white/[0.035] px-3 text-[13px] text-white outline-none [color-scheme:dark] focus:border-[#b7ff49]/40 focus:ring-1 focus:ring-[#b7ff49]/15">{options.map(x=><option key={x} value={x}>{x.replace('_',' ')}</option>)}</select></label>;
 }

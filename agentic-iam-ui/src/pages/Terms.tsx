@@ -7,7 +7,7 @@ export const Terms: React.FC = () => (
     title="Terms"
     intro="Steerpast is provided as an early-stage product and evaluation surface. Use of the public demo is subject to these basic terms."
   >
-    <div className="surface-soft rounded-[22px] border border-white/[0.08] p-7 text-[13px] leading-7 text-white/45">
+    <div className="surface-soft rounded-[22px] border border-white/[0.08] p-7 text-[13px] leading-7 text-white/65">
       <h2 className="text-[17px] font-medium text-white">Demo use</h2>
       <p className="mt-3">The public environment is for evaluation and demonstration. Do not enter production secrets, customer identity data, or other sensitive information into the demo.</p>
       <h2 className="mt-8 text-[17px] font-medium text-white">No production guarantee</h2>

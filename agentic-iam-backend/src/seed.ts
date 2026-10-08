@@ -240,6 +240,78 @@ export function seedIdentities(): Identity[] {
       entitlements: ['ent-dev-read'],
       history: [],
     },
+    // --- Demo scenarios -------------------------------------------------
+    // 1. The landing-page story: an intern is granted production DB admin.
+    {
+      id: 'id-kabir',
+      name: 'Kabir',
+      attributes: {
+        department: 'Engineering',
+        title: 'Deployment Intern',
+        seniority: 'INTERN',
+        employmentType: 'INTERN',
+        location: 'Pune',
+        identityType: 'HUMAN',
+        owner: 'Chirag',
+      },
+      roles: ['role-intern-engineer', 'role-prod-db-admin'],
+      entitlements: ['ent-dev-read', 'ent-prod-db-superuser'],
+      history: [
+        { timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, roles: ['role-intern-engineer'], entitlements: ['ent-dev-read'], riskScore: 11, status: 'NORMAL' },
+        { timestamp: Date.now() - 20 * 60 * 1000, roles: ['role-intern-engineer', 'role-prod-db-admin'], entitlements: ['ent-dev-read', 'ent-prod-db-superuser'], riskScore: 0, status: 'ANOMALY' },
+      ],
+    },
+    // 2. Segregation of duties: one contractor can both raise and approve payments.
+    {
+      id: 'id-nikhil',
+      name: 'Nikhil',
+      attributes: {
+        department: 'Finance',
+        title: 'Finance Contractor',
+        seniority: 'MID',
+        employmentType: 'CONTRACTOR',
+        location: 'Mumbai',
+        identityType: 'HUMAN',
+        owner: 'Praniti',
+      },
+      roles: ['role-finance-analyst', 'role-finance-approver'],
+      entitlements: [],
+      history: [],
+    },
+    // 3. An autonomous release agent holding critical production access.
+    {
+      id: 'id-release-agent',
+      name: 'release-agent',
+      attributes: {
+        department: 'Platform',
+        title: 'Release automation agent',
+        seniority: 'MID',
+        employmentType: 'AUTOMATION',
+        location: 'us-east-1',
+        identityType: 'AI_AGENT',
+        owner: 'Rohan',
+      },
+      roles: ['role-devops-engineer'],
+      entitlements: [],
+      history: [],
+    },
+    // 4. A well-scoped support agent, approved like any compliant identity.
+    {
+      id: 'id-support-agent',
+      name: 'support-agent',
+      attributes: {
+        department: 'Support',
+        title: 'Customer support agent',
+        seniority: 'MID',
+        employmentType: 'AUTOMATION',
+        location: 'eu-west-1',
+        identityType: 'AI_AGENT',
+        owner: 'Sneha',
+      },
+      roles: ['role-customer-support-lead'],
+      entitlements: [],
+      history: [],
+    },
   ];
 }
 
@@ -275,6 +347,17 @@ export function seedPolicies(): Policy[] {
             minSeniority: 'SENIOR',
             allowedEmploymentTypes: ['FULL_TIME'],
             allowedDepartments: ['Platform', 'Security'],
+          },
+          {
+            roleId: 'role-cloud-root-admin',
+            minSeniority: 'SENIOR',
+            allowedEmploymentTypes: ['FULL_TIME'],
+            allowedDepartments: ['Platform', 'Security'],
+          },
+          {
+            roleId: 'role-devops-engineer',
+            allowedEmploymentTypes: ['FULL_TIME', 'AUTOMATION'],
+            allowedDepartments: ['Platform', 'Engineering'],
           },
         ],
       },

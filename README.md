@@ -43,15 +43,26 @@ The response is validated before becoming a decision:
 - rationale must be non-empty
 - confidence must be numeric and bounded to 0–1
 
-If the Claude call fails or returns malformed output, the system falls back to deterministic heuristics rather than emitting an unvalidated model decision.
+If the Claude call fails or returns malformed output, the system falls back to deterministic heuristics rather than emitting an unvalidated model decision, and records the `fallbackReason`.
+
+Operationally, the Claude path runs at temperature 0 with a 12 s timeout and one retry, and caches decisions keyed on the exact facts (attributes, roles, risk score, violations) so an unchanged identity is not re-billed. Every decision carries `decisionProvider`, `model` and `latencyMs`.
 
 The public UI exposes the resulting `decisionProvider` so an operator can distinguish Claude-backed decisions from other providers.
 
-## Demo scenario
+## Demo scenarios
 
-The canonical demo is an intern receiving `production-db.admin`.
+The seeded workspace (14 identities, including two AI agents) contains four stories the agents resolve differently:
 
-The workflow demonstrates:
+| Identity | Situation | Decision |
+| --- | --- | --- |
+| Kabir, deployment intern | Holds Production Database Admin | Recommend revocation (role eligibility, critical) |
+| Nikhil, finance contractor | Holds both Finance Analyst and Finance Approver | Recommend revocation (segregation of duties) |
+| `release-agent` (AI agent) | DevOps role with production and cloud access | Flag for owner review |
+| `support-agent` (AI agent) | Scoped support role | Approve |
+
+In the workspace, **Run the intern scenario** grants production DB admin to an intern live and shows the risk, policy and decision change in one round trip. Press <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd> to jump to any identity or page, or to reset the demo data.
+
+The canonical workflow demonstrates:
 
 1. identity context
 2. contextual risk
@@ -69,7 +80,24 @@ The public demonstration intentionally uses sample data.
 - Sensitive remediation remains operator-controlled.
 - The project does not claim SOC 2, ISO 27001, or other external certification on the public site.
 
+## API hardening
+
+- Input validation on every write, 32 kb body limit, JSON errors for malformed bodies
+- Security headers (`nosniff`, `DENY` framing, strict referrer, `no-store`)
+- Per-IP rate limit on writes for the public demo
+- `GET /api/health` (pipeline status, decision provider, model, uptime) and `POST /api/reset` (restore the seeded data)
+
+## Tests
+
+```bash
+cd agentic-iam-backend && npm test
+```
+
+Jest covers each demo scenario end to end, targeted revocation, reset, and rejection of malformed model output. CI runs the UI build, backend build and tests on every push.
+
 ## Local development
+
+Install root dependencies once (`npm install` at the repo root), then:
 
 ### Backend
 

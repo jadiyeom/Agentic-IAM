@@ -36,8 +36,10 @@ export interface IdentityAttributes {
   department: string;
   title: string;
   seniority: 'INTERN' | 'JUNIOR' | 'MID' | 'SENIOR' | 'EXECUTIVE';
-  employmentType: 'FULL_TIME' | 'CONTRACTOR' | 'INTERN';
+  employmentType: 'FULL_TIME' | 'CONTRACTOR' | 'INTERN' | 'AUTOMATION';
   location: string;
+  identityType?: 'HUMAN' | 'SERVICE' | 'AI_AGENT';
+  owner?: string;
 }
 
 export interface Identity {
@@ -83,6 +85,10 @@ export interface DecisionResult {
   confidence: number;
   usedLLM: boolean;
   decisionProvider: 'claude' | 'huggingface' | 'heuristic';
+  model?: string;
+  latencyMs?: number;
+  cached?: boolean;
+  fallbackReason?: string;
 }
 
 export interface AuditRecord {
@@ -134,6 +140,10 @@ export async function performRemediationAction(params: {
     reason: params.reason,
   });
   return res.data;
+}
+
+export async function resetDemo(): Promise<void> {
+  await axios.post('/api/reset');
 }
 
 export async function fetchMetrics(): Promise<Metrics> {

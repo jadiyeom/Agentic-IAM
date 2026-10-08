@@ -7,7 +7,7 @@ export const Privacy: React.FC = () => (
     title="Privacy"
     intro="Steerpast is an early-stage product. This page describes the basic privacy posture of the public website and demo."
   >
-    <div className="surface-soft rounded-[22px] border border-white/[0.08] p-7 text-[13px] leading-7 text-white/45">
+    <div className="surface-soft rounded-[22px] border border-white/[0.08] p-7 text-[13px] leading-7 text-white/65">
       <h2 className="text-[17px] font-medium text-white">Public demo</h2>
       <p className="mt-3">The hosted demo uses seeded/sample identity and entitlement data. Visitors are not asked to connect a production identity provider.</p>
       <h2 className="mt-8 text-[17px] font-medium text-white">Credentials</h2>
