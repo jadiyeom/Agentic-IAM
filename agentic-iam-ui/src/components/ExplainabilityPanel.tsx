@@ -1,81 +1,16 @@
 import React from 'react';
-import { IdentityViewModel } from '../services/iamApi';
-import { FileText, ShieldAlert } from 'lucide-react';
+import {IdentityViewModel} from '../services/iamApi';
+import {FileText,ShieldAlert,CheckCircle2,BrainCircuit} from 'lucide-react';
 
-interface Props {
-  viewModel: IdentityViewModel | null;
-}
-
-export const ExplainabilityPanel: React.FC<Props> = ({ viewModel }) => {
-  if (!viewModel) {
-    return (
-      <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-700/80 bg-surfaceAlt/60 p-4 text-xs text-slate-500">
-        Select an identity to inspect agent reasoning, policy violations, and audit trail.
-      </div>
-    );
-  }
-
-  const { identity, audit, policy, risk } = viewModel;
-
-  return (
-    <div className="flex h-full flex-col gap-3 rounded-xl border border-slate-700 bg-surfaceAlt/90 p-4 shadow-lg">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-50">Explainability & Audit</h3>
-          <p className="text-xs text-slate-400">
-            Why the system considered this identity risky and how the decision was made.
-          </p>
-        </div>
-        <div className="rounded-full bg-slate-900/80 px-3 py-1 text-[10px] text-slate-400">
-          {new Date(audit.timestamp).toLocaleTimeString()}
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-xs">
-        <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-slate-100">
-          <ShieldAlert className="h-3.5 w-3.5 text-danger" />
-          Policy Violations ({policy.violations.length})
-        </div>
-        {policy.violations.length === 0 ? (
-          <p className="text-[11px] text-emerald-300">No violations. Access profile appears compliant.</p>
-        ) : (
-          <ul className="space-y-1.5">
-            {policy.violations.map((v) => (
-              <li key={v.id} className="rounded border border-slate-700/70 bg-slate-950/60 px-2 py-1">
-                <div className="flex items-center justify-between text-[10px] uppercase tracking-wide">
-                  <span className="text-slate-300">{v.policyType}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 ${
-                      v.severity === 'CRITICAL'
-                        ? 'bg-red-500/20 text-red-300'
-                        : v.severity === 'HIGH'
-                        ? 'bg-orange-500/20 text-orange-200'
-                        : 'bg-yellow-500/10 text-yellow-200'
-                    }`}
-                  >
-                    {v.severity}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[11px] text-slate-200">{v.description}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="flex-1 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-xs">
-        <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-slate-100">
-          <FileText className="h-3.5 w-3.5 text-accent" />
-          Natural-Language Explanation
-        </div>
-        <p className="mb-1 text-[11px] text-slate-300">{audit.explanation}</p>
-        <p className="mt-2 text-[10px] text-slate-500">
-          Identity {identity.name} ({identity.attributes.title}, {identity.attributes.department}) evaluated with risk{' '}
-          {risk.riskScore}. Decision: {audit.decision.outcome} ({Math.round(audit.decision.confidence * 100)}%
-          confidence).
-        </p>
-      </div>
-    </div>
-  );
+export const ExplainabilityPanel:React.FC<{viewModel:IdentityViewModel|null}>=({viewModel})=>{
+ if(!viewModel)return <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.015] p-10 text-center text-[12px] text-white/25">Select an identity to inspect the decision trace.</div>;
+ const {identity,audit,policy,risk,decision}=viewModel;
+ return <div className="rounded-xl border border-white/[0.08] bg-[#0b0c0f]">
+  <div className="flex flex-col gap-3 border-b border-white/[0.07] px-5 py-5 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2"><BrainCircuit className="h-4 w-4 text-white/45"/><h3 className="text-[14px] font-medium">Decision reasoning</h3></div><p className="mt-1 text-[11px] text-white/28">Evidence assembled from identity, risk, and policy evaluation.</p></div><span className="font-mono text-[10px] text-white/25">{new Date(audit.timestamp).toLocaleTimeString()}</span></div>
+  <div className="grid gap-px bg-white/[0.07] lg:grid-cols-2">
+   <div className="bg-[#0b0c0f] p-5"><div className="flex items-center gap-2 text-[10px] uppercase tracking-[.14em] text-white/25"><ShieldAlert className="h-3.5 w-3.5"/>Policy evaluation</div><div className="mt-4 text-[12px] text-white/55">{policy.violations.length?policy.violations.length+' violation(s) detected':'No policy violations detected.'}</div><div className="mt-3 space-y-2">{policy.violations.slice(0,4).map(v=><div key={v.id} className="rounded-md border border-white/[0.07] bg-white/[0.02] p-3"><div className="flex justify-between gap-3"><span className="font-mono text-[10px] text-white/40">{v.policyType}</span><span className="text-[9px] uppercase text-red-300/75">{v.severity}</span></div><p className="mt-1.5 text-[11px] leading-5 text-white/45">{v.description}</p></div>)}</div></div>
+   <div className="bg-[#0b0c0f] p-5"><div className="flex items-center gap-2 text-[10px] uppercase tracking-[.14em] text-white/25"><FileText className="h-3.5 w-3.5"/>Natural-language explanation</div><p className="mt-4 text-[13px] leading-6 text-white/48">{audit.explanation}</p><div className="mt-5 border-t border-white/[0.07] pt-4 text-[11px] text-white/28">Identity <span className="text-white/55">{identity.name}</span> · risk <span className="text-white/55">{risk.riskScore}/100</span> · <span className="text-white/55">{Math.round(decision.confidence*100)}% confidence</span></div></div>
+  </div>
+  <div className="border-t border-white/[0.07] bg-white/[0.015] px-5 py-4"><div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-300/70"/><div><div className="text-[10px] uppercase tracking-[.14em] text-white/25">Final rationale</div><p className="mt-1.5 text-[12px] leading-5 text-white/45">{decision.rationale}</p></div></div></div>
+ </div>;
 };
-

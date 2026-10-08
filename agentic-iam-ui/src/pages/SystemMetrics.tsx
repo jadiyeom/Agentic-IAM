@@ -1,58 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { fetchMetrics, Metrics, fetchIdentities, IdentityViewModel } from '../services/iamApi';
-import { DecisionFlow } from '../components/DecisionFlow';
+import React,{useEffect,useState} from 'react';
+import {fetchMetrics,Metrics,fetchIdentities,IdentityViewModel} from '../services/iamApi';
+import {DecisionFlow} from '../components/DecisionFlow';
+import {Activity,ShieldCheck,Clock3,AlertTriangle,Workflow,Database} from 'lucide-react';
 
-export const SystemMetrics: React.FC = () => {
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [identities, setIdentities] = useState<IdentityViewModel[]>([]);
-  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    fetchMetrics().then(setMetrics);
-    fetchIdentities().then((ids) => {
-      setIdentities(ids);
-      if (!selectedId && ids.length > 0) {
-        setSelectedId(ids[0].identity.id);
-      }
-    });
-  }, []);
-
-  if (!metrics) {
-    return <div className="p-4 text-slate-400">Loading system metrics...</div>;
-  }
-
-  const meanDecisionTimeMs =
-    metrics.totalDecisions > 0
-      ? Math.round(metrics.cumulativeDecisionTimeMs / metrics.totalDecisions)
-      : 0;
-
-  const selected = identities.find((vm) => vm.identity.id === selectedId) ?? null;
-
-  return (
-    <div className="mx-auto max-w-xl flex flex-col gap-4 px-4 py-4">
-      <h1 className="text-xl font-bold text-slate-100 mb-2">System Metrics</h1>
-      <div className="rounded-xl border border-slate-700 bg-surfaceAlt/80 p-4 shadow-lg mb-2">
-        <div className="flex flex-col gap-1 text-xs text-slate-200">
-          <div>Agent Status: <span className="font-semibold text-emerald-400">Active</span></div>
-          <div>Last Run: <span className="font-semibold">2m ago</span></div>
-          <div>Policies Loaded: <span className="font-semibold">24</span></div>
-          <div>Latency: <span className="font-semibold">120ms</span></div>
-        </div>
-      </div>
-      {/* Alert Feed */}
-      <div className="rounded-xl border border-slate-700 bg-surfaceAlt/80 p-4 shadow-lg">
-        <h3 className="text-sm font-semibold text-slate-100 mb-1">Alert Feed</h3>
-        <ul className="text-xs text-slate-300">
-          <li className="mb-1">• High-risk identity detected</li>
-          <li className="mb-1">• Policy update applied</li>
-          <li className="mb-1">• Override logged</li>
-        </ul>
-      </div>
-      <DecisionFlow
-        risk={selected?.risk ?? null}
-        policy={selected?.policy ?? null}
-        decision={selected?.decision?.outcome ?? null}
-      />
-    </div>
-  );
+export const SystemMetrics:React.FC=()=>{
+ const [metrics,setMetrics]=useState<Metrics|null>(null); const [ids,setIds]=useState<IdentityViewModel[]>([]); const [selectedId,setSelectedId]=useState<string>();
+ useEffect(()=>{fetchMetrics().then(setMetrics);fetchIdentities().then(x=>{setIds(x);setSelectedId(x[0]?.identity.id);});},[]);
+ if(!metrics)return <div className="mx-auto max-w-[1280px] px-5 py-12 text-[13px] text-white/35">Loading system telemetry...</div>;
+ const mean=metrics.totalDecisions?Math.round(metrics.cumulativeDecisionTimeMs/metrics.totalDecisions):0; const selected=ids.find(x=>x.identity.id===selectedId)||null;
+ const cards=[{label:'Decisions',value:String(metrics.totalDecisions),detail:String(metrics.decisionsOverridden)+' overrides',icon:Activity},{label:'Anomalies',value:String(metrics.anomaliesDetected),detail:'detected by risk evaluation',icon:AlertTriangle},{label:'Policy violations',value:String(metrics.policyViolationsDetected),detail:'requires review',icon:ShieldCheck},{label:'Mean latency',value:mean+' ms',detail:'per evaluation',icon:Clock3}];
+ return <div className="mx-auto max-w-[1480px] px-5 py-8 sm:px-7 lg:px-10 lg:py-10">
+  <div className="border-b border-white/[0.08] pb-7"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/[0.045]"><Activity className="h-5 w-5 text-white/55"/></div><div><h1 className="text-2xl font-semibold tracking-[-.035em] sm:text-3xl">System</h1><p className="mt-1.5 text-[13px] text-white/38">Agent health, evaluation throughput, and the decision pipeline.</p></div></div></div>
+  <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.07] sm:grid-cols-2 lg:grid-cols-4">{cards.map(card=>{const Icon=card.icon;return <div key={card.label} className="bg-[#0b0c0f] p-5"><Icon className="h-4 w-4 text-white/35"/><div className="mt-4 text-2xl font-semibold tracking-[-.03em]">{card.value}</div><div className="mt-1 text-[11px] text-white/25">{card.label} · {card.detail}</div></div>})}</div>
+  <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_330px]">
+   <div className="space-y-4"><DecisionFlow risk={selected?.risk??null} policy={selected?.policy??null} decision={selected?.decision?.outcome??null}/><div className="rounded-xl border border-white/[0.08] bg-[#0b0c0f] p-5"><div className="flex items-center justify-between"><div><div className="text-[10px] uppercase tracking-[.14em] text-white/25">Agent architecture</div><div className="mt-1 text-[14px] font-medium">Evaluation pipeline</div></div><Workflow className="h-4 w-4 text-white/30"/></div><div className="mt-6 grid gap-2 sm:grid-cols-3">{['IdentityAgent','RiskAgent','PolicyAgent','DecisionAgent','RemediationAgent','AuditAgent'].map((x,i)=><div key={x} className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3"><div className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400"/><span className="font-mono text-[10px] text-white/55">{x}</span></div><div className="mt-2 text-[10px] text-white/25">{i<3?'context evaluation':'decision lifecycle'}</div></div>)}</div></div></div>
+   <aside className="rounded-xl border border-white/[0.08] bg-[#0b0c0f] p-5"><div className="flex items-center gap-2"><Database className="h-4 w-4 text-white/35"/><span className="text-[11px] uppercase tracking-[.14em] text-white/25">Agent status</span></div><div className="mt-5 rounded-lg border border-emerald-400/15 bg-emerald-400/[0.04] p-4"><div className="flex items-center gap-2 text-[12px] text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400"/>Evaluation engine active</div><p className="mt-2 text-[11px] leading-5 text-white/28">Six specialized agents are connected through the decision pipeline.</p></div><div className="mt-5 border-t border-white/[0.07] pt-5"><div className="text-[10px] uppercase tracking-[.14em] text-white/25">Inspect evaluation</div><div className="mt-3 space-y-1">{ids.slice(0,6).map(vm=><button key={vm.identity.id} onClick={()=>setSelectedId(vm.identity.id)} className={'flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[11px] '+(vm.identity.id===selectedId?'bg-white/[0.06] text-white':'text-white/40 hover:bg-white/[0.03] hover:text-white')}><span>{vm.identity.name}</span><span className="font-mono text-[10px] text-white/25">{vm.risk.riskScore}</span></button>)}</div></div></aside>
+  </div>
+ </div>;
 };

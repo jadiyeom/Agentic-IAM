@@ -1,36 +1,6 @@
 import React from 'react';
-
-interface Props {
-  score: number;
-  anomaly: boolean;
-}
-
-function riskColor(score: number): string {
-  if (score >= 80) return 'bg-red-500/20 text-red-300 border-red-400';
-  if (score >= 60) return 'bg-orange-500/20 text-orange-300 border-orange-400';
-  if (score >= 40) return 'bg-yellow-500/20 text-yellow-200 border-yellow-400';
-  return 'bg-emerald-500/15 text-emerald-200 border-emerald-400';
-}
-
-export const RiskBadge: React.FC<Props> = ({ score, anomaly }) => {
-  const label = anomaly ? 'Anomaly' : 'Normal';
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${riskColor(
-          score
-        )}`}
-      >
-        Risk {score}
-      </span>
-      <span
-        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
-          anomaly ? 'border-danger text-danger bg-danger/10' : 'border-emerald-400 text-emerald-300 bg-emerald-500/10'
-        }`}
-      >
-        {label}
-      </span>
-    </div>
-  );
+interface Props{score:number;anomaly:boolean}
+export const RiskBadge:React.FC<Props>=({score,anomaly})=>{
+ const cls=score>=80?'border-red-400/25 bg-red-400/[0.06] text-red-300':score>=60?'border-orange-400/25 bg-orange-400/[0.06] text-orange-300':score>=40?'border-amber-400/25 bg-amber-400/[0.06] text-amber-300':'border-emerald-400/20 bg-emerald-400/[0.05] text-emerald-300';
+ return <div className="flex items-center gap-2"><span className={'rounded-md border px-2 py-1 text-[10px] font-medium '+cls}>{score}/100</span>{anomaly&&<span className="rounded-md border border-red-400/20 bg-red-400/[0.04] px-2 py-1 text-[9px] uppercase tracking-wide text-red-300">Anomaly</span>}</div>;
 };
-
