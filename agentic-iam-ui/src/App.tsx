@@ -7,6 +7,9 @@ import { Landing } from './pages/Landing';
 import { Claude } from './pages/Claude';
 import { Security } from './pages/Security';
 import { Company } from './pages/Company';
+import { DemoIntro } from './pages/DemoIntro';
+import { Privacy } from './pages/Privacy';
+import { Terms } from './pages/Terms';
 import Entitlements from './pages/Entitlements';
 import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Command } from 'lucide-react';
 
@@ -39,9 +42,7 @@ const DemoNav: React.FC = () => {
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-white/[0.08] bg-[#08090b] lg:flex lg:flex-col">
       <div className="flex h-16 items-center border-b border-white/[0.07] px-5">
         <button onClick={() => navigate('/', { replace: true })} className="group flex items-center gap-2.5 text-sm font-semibold text-white">
-          <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/[0.05] transition group-hover:border-white/20 group-hover:bg-white/[0.08]">
-            <Command className="h-3.5 w-3.5" />
-          </span>
+          <img src="/steerpast-logo.png" alt="" aria-hidden="true" className="h-8 w-8 rounded-[10px] object-cover transition group-hover:scale-[1.03]" />
           Steerpast IAM
         </button>
       </div>
@@ -84,7 +85,7 @@ const DemoNav: React.FC = () => {
 const MobileBar: React.FC = () => (
   <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/[0.08] bg-[#08090b]/90 px-4 backdrop-blur-xl lg:hidden">
     <button onClick={() => window.history.back()} className="flex items-center gap-2 text-sm font-semibold text-white">
-      <Command className="h-4 w-4" />
+      <img src="/steerpast-logo.png" alt="" aria-hidden="true" className="h-7 w-7 rounded-[9px] object-cover" />
       Steerpast IAM
     </button>
     <Link to="/" replace className="flex items-center gap-1.5 text-xs text-white/55 hover:text-white">
@@ -134,7 +135,9 @@ const App: React.FC = () => (
       <Route path="/claude" element={<Claude />} />
       <Route path="/security" element={<Security />} />
       <Route path="/company" element={<Company />} />
-      <Route path="/demo" element={<Navigate to="/identities" replace />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/demo" element={<DemoIntro />} />
       <Route path="/*" element={
         <RequireAuth>
           <DemoShell />
