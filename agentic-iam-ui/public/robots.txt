@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /demo
+Disallow: /identities
+Disallow: /entitlements
+Disallow: /explain-audit
+Disallow: /system-metrics
+
+Sitemap: https://steerpast.com/sitemap.xml
