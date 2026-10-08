@@ -2,6 +2,7 @@ import { RiskEvaluationResult } from './RiskAgent';
 import { PolicyEvaluationResult } from './PolicyAgent';
 import { Identity } from '../models/Identity';
 import { huggingfaceConfig } from '../huggingfaceConfig';
+import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
 
 export type DecisionOutcome =
@@ -27,12 +28,30 @@ export interface DecisionResult {
 export class DecisionAgent {
 
   async decide(context: DecisionContext): Promise<DecisionResult> {
-    // Use Hugging Face if apiKey and endpoint are set, else fallback
-    const useHF = huggingfaceConfig.apiKey && huggingfaceConfig.endpoint && huggingfaceConfig.model;
-    if (useHF) {
-      return this.decideWithLLM(context);
+    if (process.env.ANTHROPIC_API_KEY) {
+      return this.decideWithClaude(context);
     }
+    const useHF = huggingfaceConfig.apiKey && huggingfaceConfig.endpoint && huggingfaceConfig.model;
+    if (useHF) return this.decideWithLLM(context);
     return this.decideHeuristically(context);
+  }
+
+  private async decideWithClaude(context: DecisionContext): Promise<DecisionResult> {
+    const { identity, risk, policy } = context;
+    try {
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const response = await client.messages.create({
+        model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+        max_tokens: 300,
+        system: 'You are an identity security decision engine. Return only JSON with outcome, rationale, confidence. Valid outcomes: APPROVE, FLAG_FOR_REVIEW, RECOMMEND_REVOCATION, AUTO_REMEDIATE.',
+        messages: [{ role: 'user', content: JSON.stringify({ identity, risk, policyViolations: policy.violations }) }],
+      });
+      const text = response.content.find((block) => block.type === 'text')?.text || '';
+      const parsed = JSON.parse(text.match(/\{[\\s\\S]*\}/)?.[0] || text);
+      return { identityId: identity.id, outcome: parsed.outcome, rationale: parsed.rationale, confidence: Number(parsed.confidence), usedLLM: true };
+    } catch {
+      return this.decideHeuristically(context);
+    }
   }
 
   private async decideWithLLM(context: DecisionContext): Promise<DecisionResult> {
