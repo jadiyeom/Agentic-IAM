@@ -10,7 +10,7 @@ import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Command } from '
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isAuthed = localStorage.getItem('steerpast-iam-auth') === 'true';
-  if (!isAuthed) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthed) return <Navigate to="/" state={{ from: location }} replace />;
   return <>{children}</>;
 }
 
@@ -65,7 +65,7 @@ const DemoNav: React.FC = () => {
       </div>
 
       <div className="mt-auto border-t border-white/[0.07] p-3">
-        <button onClick={() => navigate('/login', { replace: true })} className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-[12px] text-white/50 transition hover:bg-white/[0.045] hover:text-white">
+        <button onClick={() => navigate('/', { replace: true })} className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-[12px] text-white/50 transition hover:bg-white/[0.045] hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           Back to landing
         </button>
