@@ -4,6 +4,9 @@ import { Identities } from './pages/Identities';
 import { ExplainAudit } from './pages/ExplainAudit';
 import { SystemMetrics } from './pages/SystemMetrics';
 import { Landing } from './pages/Landing';
+import { Claude } from './pages/Claude';
+import { Security } from './pages/Security';
+import { Company } from './pages/Company';
 import Entitlements from './pages/Entitlements';
 import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Command } from 'lucide-react';
 
@@ -128,6 +131,9 @@ const App: React.FC = () => (
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/claude" element={<Claude />} />
+      <Route path="/security" element={<Security />} />
+      <Route path="/company" element={<Company />} />
       <Route path="/demo" element={<Navigate to="/identities" replace />} />
       <Route path="/*" element={
         <RequireAuth>

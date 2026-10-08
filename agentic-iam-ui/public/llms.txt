@@ -1,0 +1,31 @@
+# Steerpast IAM
+
+> Steerpast IAM is an identity security control plane for human, service, and AI-agent identities.
+
+## Product
+
+Steerpast connects identity context, contextual risk, policy evaluation, model-assisted decisioning, remediation, and audit evidence in one workflow.
+
+Core workflow:
+1. Observe identity and entitlement context.
+2. Assess privilege, sensitivity, and behavioral risk.
+3. Evaluate policy constraints.
+4. Decide with a model-backed DecisionAgent when Claude is configured.
+5. Act through review, revocation, or another controlled remediation path.
+
+## Claude integration
+
+The backend DecisionAgent can use the Anthropic Claude API when ANTHROPIC_API_KEY is configured. The project accepts four decision outcomes: APPROVE, FLAG_FOR_REVIEW, RECOMMEND_REVOCATION, and AUTO_REMEDIATE.
+
+Claude output is parsed and validated. Outcome must be supported, rationale must be non-empty, and confidence must be numeric and bounded to 0–1. Failed model calls fall back to deterministic heuristics.
+
+## Security
+
+The public demo uses sample data and does not require a production identity-provider connection. API credentials are expected to remain server-side. Sensitive remediation is operator-controlled.
+
+## Public pages
+
+- https://steerpast.com/
+- https://steerpast.com/claude
+- https://steerpast.com/security
+- https://steerpast.com/company
