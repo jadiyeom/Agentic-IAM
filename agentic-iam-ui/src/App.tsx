@@ -14,6 +14,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const SteerpastMark = ({className='h-7 w-7'}:{className?:string}) => (
+  <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+    <defs><linearGradient id="steerpast-mark-app" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f4ffd0"/><stop offset="0.48" stopColor="#b7ff49"/><stop offset="1" stopColor="#00ed4f"/></linearGradient></defs>
+    <path fill="url(#steerpast-mark-app)" d="M5 4h31c14 0 23 10 23 24 0 12-7 20-18 24l-1-8c7-3 10-8 10-16 0-8-5-13-14-13H16c-7 0-10 3-11 9V4Z"/>
+    <path fill="#050505" d="M5 28c3-7 8-10 16-10h16c4 0 7 2 7 5s-2 5-7 5H20c-3 0-5 1-5 3 0 2 2 3 6 4l15 5c5 2 8 5 8 9 0 4-3 7-8 9L5 60l26-17c3-2 3-4 0-5l-18-6c-6-2-9-6-8-10v6Z"/>
+  </svg>
+);
+
 const navItems = [
   { to: '/identities', label: 'Identities', icon: Users },
   { to: '/entitlements', label: 'Entitlements', icon: Boxes },
@@ -30,7 +38,7 @@ const DemoNav: React.FC = () => {
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[252px] border-r border-white/[0.08] bg-[#08090b] lg:flex lg:flex-col">
       <div className="flex h-16 items-center border-b border-white/[0.07] px-5">
         <button onClick={() => navigate('/login', { replace: true })} className="group flex items-center gap-2.5 text-[14px] font-semibold tracking-[-0.02em] text-white">
-          <span className="grid h-7 w-7 place-items-center rounded-md border border-white/10 bg-white/[0.05] transition group-hover:border-white/20 group-hover:bg-white/[0.09]"><Command className="h-3.5 w-3.5" /></span>
+          <SteerpastMark className="h-7 w-7" />
           Steerpast <span className="text-white/35">IAM</span>
         </button>
       </div>
@@ -61,7 +69,7 @@ const DemoNav: React.FC = () => {
 
 const MobileBar: React.FC = () => (
   <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/[0.08] bg-[#08090b]/90 px-4 backdrop-blur-xl lg:hidden">
-    <Link to="/identities" replace className="flex items-center gap-2 text-sm font-semibold text-white"><Command className="h-4 w-4" />Steerpast IAM</Link>
+    <Link to="/identities" replace className="flex items-center gap-2 text-sm font-semibold text-white"><SteerpastMark className="h-6 w-6" />Steerpast IAM</Link>
     <Link to="/login" replace className="flex items-center gap-1.5 text-xs text-white/55 hover:text-white"><ArrowLeft className="h-3.5 w-3.5" />Landing</Link>
   </div>
 );
