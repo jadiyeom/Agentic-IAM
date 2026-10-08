@@ -48,7 +48,13 @@ export const Landing: React.FC = () => {
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute left-1/2 top-0 h-[560px] w-[900px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(183,255,73,0.08),transparent_62%)]" />
           <div className="relative mx-auto max-w-[1000px] px-5 pb-28 pt-24 text-center lg:pt-32">
-            <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-white/45">
+            <div className="mb-8 flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-[-18px] rounded-[28px] bg-[#b7ff49]/10 blur-2xl" />
+                <img src="/steerpast-logo.png" alt="Steerpast" className="relative h-20 w-20 rounded-[22px] object-cover shadow-[0_12px_48px_rgba(183,255,73,.12)] sm:h-24 sm:w-24" />
+              </div>
+            </div>
+            <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-[#b7ff49] shadow-[0_0_12px_rgba(183,255,73,.7)]" />
               Identity security for the agentic era
             </div>
@@ -130,7 +136,7 @@ export const Landing: React.FC = () => {
                 <Link to="/claude" className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-[12px] text-white/60 transition hover:border-white/20 hover:text-white">See the Claude architecture <ArrowUpRight className="h-3.5 w-3.5"/></Link>
               </div>
               <div className="rounded-2xl border border-[#b7ff49]/15 bg-[#b7ff49]/[0.025] p-6">
-                <div className="flex items-center gap-3"><Cpu className="h-4 w-4 text-[#b7ff49]"/><div className="text-[13px] font-medium">Decision pipeline</div></div>
+                <div className="flex items-center gap-3"><Cpu className="h-4 w-4 text-[#b7ff49]"/><div className="text-[14px] font-medium">Decision pipeline</div></div>
                 <div className="mt-6 space-y-3">
                   {[
                     ['Identity context','owner · role · entitlements','white'],
@@ -151,7 +157,7 @@ export const Landing: React.FC = () => {
           <div className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
             <SectionIntro eyebrow="How it works" title="Set the context. Let the system follow the decision." text="Five focused steps connect an access event to an accountable outcome."/>
             <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] md:grid-cols-5">
-              {[['01','Observe','IdentityAgent','Collect identity and entitlement context.'],['02','Assess','RiskAgent','Score privilege, sensitivity, and behavior.'],['03','Evaluate','PolicyAgent','Check policies and access constraints.'],['04','Decide','DecisionAgent','Produce an explainable outcome.'],['05','Act','RemediationAgent','Recommend the safest next action.']].map(([n,t,a,d])=><div key={n} className="bg-[#0b0c0d] p-6 md:min-h-[230px]"><div className="font-mono text-[9px] text-white/20">{n}</div><div className="mt-12 text-[14px] font-medium">{t}</div><div className="mt-2 font-mono text-[9px] text-white/25">{a}</div><p className="mt-4 text-[12px] leading-5 text-white/30">{d}</p></div>)}
+              {[['01','Observe','IdentityAgent','Collect identity and entitlement context.'],['02','Assess','RiskAgent','Score privilege, sensitivity, and behavior.'],['03','Evaluate','PolicyAgent','Check policies and access constraints.'],['04','Decide','DecisionAgent','Produce an explainable outcome.'],['05','Act','RemediationAgent','Recommend the safest next action.']].map(([n,t,a,d])=><div key={n} className="bg-[#0b0c0d] p-6 md:min-h-[230px]"><div className="font-mono text-[9px] text-white/20">{n}</div><div className="mt-12 text-[14px] font-medium">{t}</div><div className="mt-2 font-mono text-[9px] text-white/25">{a}</div><p className="mt-4 text-[13px] leading-6 text-white/30">{d}</p></div>)}
             </div>
           </div>
         </section>
@@ -175,7 +181,7 @@ export const Landing: React.FC = () => {
           <div className="mx-auto max-w-[1160px] px-5 py-28 lg:px-8">
             <SectionIntro eyebrow="Architecture" title="Six specialized agents. One accountable control plane." text="Each agent has a narrow responsibility. The orchestrator connects their outputs into a decision that can be inspected instead of hiding everything behind one opaque score."/>
             <div className="mt-14 grid overflow-hidden rounded-2xl border border-white/[0.08] sm:grid-cols-2 lg:grid-cols-3">
-              {[['IdentityAgent','Identity graph','Who is acting, and what context belongs to them?',Fingerprint],['RiskAgent','Risk engine','How dangerous is this access in context?',Activity],['PolicyAgent','Policy evaluation','Does the requested access violate a control?',ShieldCheck],['DecisionAgent','Decision synthesis','What should happen, and why?',Sparkles],['RemediationAgent','Action loop','What safe next action closes the gap?',GitBranch],['AuditAgent','Evidence trail','Can every decision be reconstructed later?',Database]].map(([name,sub,text,Icon])=>{const I=Icon as React.ElementType; return <div key={name as string} className="border-b border-r border-white/[0.07] p-6"><I className="h-4 w-4 text-white/40"/><div className="mt-6 font-mono text-[10px] text-white/30">{name as string}</div><div className="mt-1 text-[14px] font-medium">{sub as string}</div><p className="mt-3 text-[12px] leading-5 text-white/28">{text as string}</p></div>})}
+              {[['IdentityAgent','Identity graph','Who is acting, and what context belongs to them?',Fingerprint],['RiskAgent','Risk engine','How dangerous is this access in context?',Activity],['PolicyAgent','Policy evaluation','Does the requested access violate a control?',ShieldCheck],['DecisionAgent','Decision synthesis','What should happen, and why?',Sparkles],['RemediationAgent','Action loop','What safe next action closes the gap?',GitBranch],['AuditAgent','Evidence trail','Can every decision be reconstructed later?',Database]].map(([name,sub,text,Icon])=>{const I=Icon as React.ElementType; return <div key={name as string} className="border-b border-r border-white/[0.07] p-6"><I className="h-4 w-4 text-white/40"/><div className="mt-6 font-mono text-[10px] text-white/30">{name as string}</div><div className="mt-1 text-[14px] font-medium">{sub as string}</div><p className="mt-3 text-[13px] leading-6 text-white/28">{text as string}</p></div>})}
             </div>
           </div>
         </section>
@@ -196,8 +202,15 @@ export const Landing: React.FC = () => {
               <h2 className="mt-4 font-serif text-3xl font-medium leading-tight tracking-[-0.04em] sm:text-5xl">Built to make security decisions inspectable.</h2>
               <p className="mt-5 text-[14px] leading-7 text-white/36">The public demo is intentionally isolated and uses sample data. Production integrations should keep secrets server-side and preserve human authority over sensitive remediation.</p>
             </div>
-            <div className="grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2">
-              []
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#101113] p-6 sm:p-7">
+              <div className="absolute right-[-80px] top-[-80px] h-56 w-56 rounded-full bg-[#b7ff49]/[0.07] blur-3xl" />
+              <div className="relative flex items-center gap-4">
+                <img src="/steerpast-logo.png" alt="Steerpast" className="h-14 w-14 rounded-[16px] object-cover ring-1 ring-white/10" />
+                <div><div className="text-[14px] font-medium">Decision evidence</div><div className="mt-1 text-[12px] text-white/30">Every important access decision stays inspectable.</div></div>
+              </div>
+              <div className="relative mt-6 space-y-2">
+                {[['01','Identity context','owner · role · entitlement'],['02','Risk + policy','privilege · sensitivity · constraint'],['03','Decision','outcome · rationale · confidence'],['04','Action trail','review · revoke · audit evidence']].map(([n,title,detail])=><div key={n} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3"><span className="font-mono text-[9px] text-white/20">{n}</span><div className="min-w-0"><div className="text-[12px] font-medium text-white/70">{title}</div><div className="mt-0.5 font-mono text-[9px] text-white/22">{detail}</div></div><Check className="ml-auto h-3.5 w-3.5 shrink-0 text-[#b7ff49]/65"/></div>)}
+              </div>
             </div>
           </div>
           <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2">
@@ -206,7 +219,7 @@ export const Landing: React.FC = () => {
               ['Server-side secrets','Anthropic credentials are read from server environment variables, never from browser code.'],
               ['Validated model output','DecisionAgent accepts only supported outcomes, non-empty rationales, and numeric confidence.'],
               ['Human authority','Operators can review, revoke, or override a recommendation and record the reason.']
-            ].map(([title,text])=><div key={title} className="bg-[#0b0c0d] p-6"><div className="text-[13px] font-medium">{title}</div><p className="mt-3 text-[11px] leading-5 text-white/28">{text}</p></div>)}
+            ].map(([title,text])=><div key={title} className="bg-[#0b0c0d] p-6"><div className="text-[14px] font-medium">{title}</div><p className="mt-3 text-[12px] leading-6 text-white/28">{text}</p></div>)}
           </div>
           <Link to="/security" className="mt-8 inline-flex items-center gap-2 text-[12px] text-white/45 hover:text-white">Read the security model <ArrowUpRight className="h-3.5 w-3.5"/></Link>
         </section>
@@ -219,7 +232,7 @@ export const Landing: React.FC = () => {
                 {name:'Pilot',price:'$29',sub:'per month · early access',items:['Everything in Free','Agent-aware identities','Remediation controls','Audit evidence'],featured:true},
                 {name:'Growth',price:'$99',sub:'per month · growing teams',items:['Everything in Pilot','Advanced policy controls','Team workspaces','Priority support']},
                 {name:'Enterprise',price:'Custom',sub:'deployment & governance',items:['Custom integrations','Security requirements','Deployment support','Volume & SLA planning']}
-              ].map(t=><div key={t.name} className={`relative rounded-2xl border p-7 ${t.featured?'border-[#b7ff49]/25 bg-[#b7ff49]/[0.035]':'border-white/[0.08] bg-white/[0.015]'}`}>{t.featured&&<div className="absolute right-5 top-5 rounded-full border border-[#b7ff49]/20 px-2 py-1 text-[8px] uppercase tracking-wider text-[#b7ff49]/65">Popular</div>}<div className="text-[12px] font-medium">{t.name}</div><div className="mt-7 font-serif text-4xl tracking-[-0.04em]">{t.price}</div><div className="mt-1 text-[10px] text-white/22">{t.sub}</div><ul className="mt-8 space-y-3">{t.items.map(x=><li key={x} className="flex gap-2 text-[11px] text-white/38"><Check className="mt-0.5 h-3.5 w-3.5 text-[#b7ff49]/60"/>{x}</li>)}</ul></div>)}
+              ].map(t=><div key={t.name} className={`relative rounded-2xl border p-7 ${t.featured?'border-[#b7ff49]/25 bg-[#b7ff49]/[0.035]':'border-white/[0.08] bg-white/[0.015]'}`}>{t.featured&&<div className="absolute right-5 top-5 rounded-full border border-[#b7ff49]/20 px-2 py-1 text-[8px] uppercase tracking-wider text-[#b7ff49]/65">Popular</div>}<div className="text-[12px] font-medium">{t.name}</div><div className="mt-7 font-serif text-4xl tracking-[-0.04em]">{t.price}</div><div className="mt-1 text-[10px] text-white/22">{t.sub}</div><ul className="mt-8 space-y-3">{t.items.map(x=><li key={x} className="flex gap-2 text-[12px] text-white/44"><Check className="mt-0.5 h-3.5 w-3.5 text-[#b7ff49]/60"/>{x}</li>)}</ul></div>)}
             </div>
           </div>
         </section>
@@ -235,7 +248,7 @@ export const Landing: React.FC = () => {
               const open=openFaq===i;
               return <div key={question} className="border-b border-white/[0.1]">
                 <button type="button" onClick={()=>setOpenFaq(open?null:i)} className="flex w-full items-center justify-between gap-6 py-6 text-left">
-                  <span className={`text-[13px] font-medium transition ${open?'text-white':'text-white/65'}`}>{question}</span>
+                  <span className={`text-[14px] font-medium transition ${open?'text-white':'text-white/65'}`}>{question}</span>
                   <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/10 text-white/35 transition-transform duration-200 ${open?'rotate-45':''}`}><Plus className="h-3.5 w-3.5"/></span>
                 </button>
                 <div className={`grid transition-[grid-template-rows,opacity] duration-200 ${open?'grid-rows-[1fr] opacity-100':'grid-rows-[0fr] opacity-0'}`}>
@@ -273,17 +286,17 @@ function Metric({label,value,delta,danger=false}:{label:string;value:string;delt
   return <div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-4"><div className="text-[9px] uppercase tracking-[0.12em] text-white/22">{label}</div><div className={`mt-2 text-2xl font-semibold tracking-[-0.035em] ${danger?'text-red-200':'text-white'}`}>{value}</div><div className={`mt-1 text-[9px] ${danger?'text-red-300/60':'text-white/22'}`}>{delta}</div></div>;
 }
 function Signal({icon,title,text}:{icon:React.ReactNode;title:string;text:string}) {
-  return <div className="flex gap-4 border-r border-white/[0.08] px-5 py-8 first:pl-0 last:border-r-0 last:pr-0"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.02] text-white/45">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[13px] font-medium">{title}</div><p className="mt-1.5 text-[11px] leading-5 text-white/30">{text}</p></div></div>;
+  return <div className="flex gap-4 border-r border-white/[0.08] px-5 py-8 first:pl-0 last:border-r-0 last:pr-0"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.02] text-white/45">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[14px] font-medium">{title}</div><p className="mt-1.5 text-[12px] leading-6 text-white/30">{text}</p></div></div>;
 }
 function SectionIntro({eyebrow,title,text}:{eyebrow:string;title:string;text:string}) {
   return <div className="max-w-2xl"><div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25">{eyebrow}</div><h2 className="mt-4 font-serif text-3xl font-medium leading-tight tracking-[-0.04em] sm:text-5xl">{title}</h2><p className="mt-5 text-[14px] leading-7 text-white/36">{text}</p></div>;
 }
 function Feature({number,icon,title,text,items}:{number:string;icon:React.ReactNode;title:string;text:string;items:string[]}) {
-  return <div className="grid gap-8 py-12 md:grid-cols-[72px_1fr_1fr] md:items-start"><div className="font-mono text-[10px] text-white/18">{number}</div><div><div className="flex items-center gap-3">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4 text-white/45'})}<h3 className="text-[15px] font-medium">{title}</h3></div><p className="mt-4 max-w-lg text-[13px] leading-7 text-white/35">{text}</p></div><ul className="space-y-3 md:pt-1">{items.map(item=><li key={item} className="flex gap-3 text-[12px] text-white/38"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b7ff49]/55"/>{item}</li>)}</ul></div>;
+  return <div className="grid gap-8 py-12 md:grid-cols-[72px_1fr_1fr] md:items-start"><div className="font-mono text-[10px] text-white/18">{number}</div><div><div className="flex items-center gap-3">{React.cloneElement(icon as React.ReactElement,{className:'h-4 w-4 text-white/45'})}<h3 className="text-[15px] font-medium">{title}</h3></div><p className="mt-4 max-w-lg text-[14px] leading-7 text-white/35">{text}</p></div><ul className="space-y-3 md:pt-1">{items.map(item=><li key={item} className="flex gap-3 text-[12px] text-white/38"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b7ff49]/55"/>{item}</li>)}</ul></div>;
 }
 function Trace({icon,label,value,detail,last=false}:{icon:React.ReactNode;label:string;value:string;detail:string;last?:boolean}) {
   return <div className={`flex gap-4 py-4 ${last?'':'border-b border-white/[0.06]'}`}><div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/10 bg-[#101113] text-white/40">{React.cloneElement(icon as React.ReactElement,{className:'h-3.5 w-3.5'})}</div><div><div className="text-[9px] uppercase tracking-[0.12em] text-white/20">{label}</div><div className="mt-1 text-[12px] font-medium text-white/70">{value}</div><div className="mt-1 text-[10px] leading-5 text-white/28">{detail}</div></div></div>;
 }
 function Reason({title,text}:{title:string;text:string}) {
-  return <div className="border-t border-white/[0.1] pt-5"><h3 className="text-[14px] font-medium">{title}</h3><p className="mt-2 text-[12px] leading-6 text-white/32">{text}</p></div>;
+  return <div className="border-t border-white/[0.1] pt-5"><h3 className="text-[14px] font-medium">{title}</h3><p className="mt-2 text-[14px] leading-7 text-white/32">{text}</p></div>;
 }
