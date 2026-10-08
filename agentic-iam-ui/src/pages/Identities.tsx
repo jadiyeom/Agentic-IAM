@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { fetchIdentities, IdentityViewModel, createIdentity, fetchRoles, Role } from '../services/iamApi';
+import { fetchIdentities, IdentityViewModel, createIdentity, fetchRoles, Role, simulateAnomaly } from '../services/iamApi';
 import { IdentityTable } from '../components/IdentityTable';
 import { IdentityInspector } from '../components/IdentityInspector';
 import { RiskLegend } from '../components/RiskLegend';
 import { PageHeader, StatCard, riskTier } from '../components/ui';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, MousePointerClick, Plus, Scale, Search, ShieldAlert, Users, X } from 'lucide-react';
+import { CheckCircle2, Loader2, MousePointerClick, Play, Plus, Scale, Search, ShieldAlert, Users, X } from 'lucide-react';
 
 const useFocusParam = () => {
   const [params, setParams] = useSearchParams();
@@ -39,6 +39,40 @@ export const Identities: React.FC = () => {
   const [department, setDepartment] = useState('');
   const [riskLevel, setRiskLevel] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [simulating, setSimulating] = useState(false);
+  const [toast, setToast] = useState<{ title: string; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  async function runScenario() {
+    // The landing-page story, live: grant an intern production DB admin and watch the agents react.
+    const target = identities.find(x => x.identity.attributes.seniority === 'INTERN' && !x.identity.roles.includes('role-prod-db-admin'));
+    if (!target) {
+      setToast({ title: 'Scenario already applied', text: 'Every intern already holds production DB admin. Reset the demo from ⌘K to run it again.' });
+      return;
+    }
+    setSimulating(true);
+    const started = performance.now();
+    try {
+      const vm = await simulateAnomaly(target.identity.id, 'role-prod-db-admin');
+      const ms = Math.round(performance.now() - started);
+      await refresh();
+      setSelectedId(target.identity.id);
+      setDrawerOpen(true);
+      setToast({
+        title: `${target.identity.name} was granted Production Database Admin`,
+        text: `Risk ${target.risk.riskScore} → ${vm.risk.riskScore}, ${vm.policy.violations.length} policy violation${vm.policy.violations.length === 1 ? '' : 's'}, decision: ${vm.decision.outcome.replace(/_/g, ' ').toLowerCase()}. Round trip ${ms} ms.`,
+      });
+    } catch {
+      setToast({ title: 'Scenario failed', text: 'The API did not respond. Try again in a moment.' });
+    } finally {
+      setSimulating(false);
+    }
+  }
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [newIdentity, setNewIdentity] = useState({
@@ -139,9 +173,14 @@ export const Identities: React.FC = () => {
           description="Human, service and agent identities, ranked by risk. Select one to see why the agents decided what they did, and act on it."
           icon={<Users className="h-5 w-5" />}
           actions={
-            <button onClick={() => setShowCreate(true)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#b7ff49] px-4 text-[13px] font-semibold text-[#08090a] transition hover:bg-[#d0ff88]">
-              <Plus className="h-4 w-4" /> Create identity
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={runScenario} disabled={simulating || loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 text-[13px] font-medium text-white/85 transition hover:border-white/25 hover:bg-white/[0.07] disabled:opacity-50">
+                {simulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-current" />} Run the intern scenario
+              </button>
+              <button onClick={() => setShowCreate(true)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#b7ff49] px-4 text-[13px] font-semibold text-[#08090a] transition hover:bg-[#d0ff88]">
+                <Plus className="h-4 w-4" /> Create identity
+              </button>
+            </div>
           }
         />
 
@@ -206,6 +245,28 @@ export const Identities: React.FC = () => {
           </aside>
         </div>
       )}
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            role="status"
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-20 left-1/2 z-[65] w-[min(92vw,460px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[#111216]/95 p-4 shadow-[0_20px_60px_rgba(0,0,0,.6)] backdrop-blur-xl lg:bottom-6"
+          >
+            <div className="flex items-start gap-3">
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#b7ff49] shadow-[0_0_10px_rgba(183,255,73,.8)]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[13px] font-medium text-white">{toast.title}</div>
+                <p className="mt-1 text-[12px] leading-5 text-white/60">{toast.text}</p>
+              </div>
+              <button type="button" aria-label="Dismiss" onClick={() => setToast(null)} className="rounded-md p-1 text-white/45 hover:text-white"><X className="h-3.5 w-3.5" /></button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showCreate && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) setShowCreate(false); }}>

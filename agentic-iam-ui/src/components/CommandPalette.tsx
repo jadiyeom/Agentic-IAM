@@ -129,7 +129,7 @@ export const CommandPalette: React.FC = () => {
                 aria-expanded="true"
                 aria-controls="command-list"
                 aria-activedescendant={items[active]?.id}
-                className="h-14 flex-1 bg-transparent text-[15px] text-white outline-none placeholder:text-white/35"
+                className="h-14 flex-1 bg-transparent text-[15px] text-white outline-none placeholder:text-white/35 focus-visible:outline-none"
               />
               <kbd className="rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-white/45">esc</kbd>
             </div>

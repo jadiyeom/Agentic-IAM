@@ -1,16 +1,27 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Identities } from './pages/Identities';
-import { ExplainAudit } from './pages/ExplainAudit';
-import { SystemMetrics } from './pages/SystemMetrics';
 import { Landing } from './pages/Landing';
-import { Claude } from './pages/Claude';
-import { Security } from './pages/Security';
-import { Company } from './pages/Company';
-import { DemoIntro } from './pages/DemoIntro';
-import { Privacy } from './pages/Privacy';
-import { Terms } from './pages/Terms';
-import Entitlements from './pages/Entitlements';
+
+// Everything past the landing page is split into its own chunk, so the
+// marketing page ships without the workspace, charts and tables.
+const named = <K extends string>(loader: () => Promise<Record<K, React.ComponentType>>, key: K) =>
+  React.lazy(() => loader().then(m => ({ default: m[key] })));
+const Identities = named(() => import('./pages/Identities'), 'Identities');
+const ExplainAudit = named(() => import('./pages/ExplainAudit'), 'ExplainAudit');
+const SystemMetrics = named(() => import('./pages/SystemMetrics'), 'SystemMetrics');
+const Claude = named(() => import('./pages/Claude'), 'Claude');
+const Security = named(() => import('./pages/Security'), 'Security');
+const Company = named(() => import('./pages/Company'), 'Company');
+const DemoIntro = named(() => import('./pages/DemoIntro'), 'DemoIntro');
+const Privacy = named(() => import('./pages/Privacy'), 'Privacy');
+const Terms = named(() => import('./pages/Terms'), 'Terms');
+const Entitlements = React.lazy(() => import('./pages/Entitlements'));
+
+const PageFallback: React.FC = () => (
+  <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Loading">
+    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-[#b7ff49]" />
+  </div>
+);
 import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Search } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { CommandPalette, openCommandPalette } from './components/CommandPalette';
@@ -147,6 +158,7 @@ const DemoShell: React.FC = () => {
           exit={reduce ? undefined : { opacity: 0, y: -4, filter: 'blur(2px)' }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         >
+        <React.Suspense fallback={<PageFallback />}>
         <Routes location={location}>
           <Route path="/identities" element={<Identities />} />
           <Route path="/entitlements" element={<Entitlements />} />
@@ -155,6 +167,7 @@ const DemoShell: React.FC = () => {
           <Route path="/dashboard" element={<Navigate to="/identities" replace />} />
           <Route path="*" element={<Navigate to="/identities" replace />} />
         </Routes>
+        </React.Suspense>
         </motion.div>
         </AnimatePresence>
       </main>
@@ -171,6 +184,7 @@ const ScrollToTop: React.FC = () => {
 const App: React.FC = () => (
   <Router>
     <ScrollToTop />
+    <React.Suspense fallback={<div className="min-h-screen bg-[#08090a]"><PageFallback /></div>}>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
@@ -186,6 +200,7 @@ const App: React.FC = () => (
         </RequireAuth>
       } />
     </Routes>
+    </React.Suspense>
   </Router>
 );
 

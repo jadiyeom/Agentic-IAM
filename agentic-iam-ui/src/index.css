@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background-color: #08090a; }
 body {
   @apply font-sans text-slate-100 antialiased;
   background-color: #08090a;
