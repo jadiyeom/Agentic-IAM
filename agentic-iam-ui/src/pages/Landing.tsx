@@ -4,6 +4,8 @@ import { ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTria
 
 const demo = () => localStorage.setItem('steerpast-iam-auth','true');
 
+const contactHref = '/company#contact';
+
 const SteerpastMark = ({className='h-7 w-7'}:{className?:string}) => (
   <img src="/steerpast-logo.png" alt="" aria-hidden="true" className={`shrink-0 rounded-[9px] object-cover ${className}`} />
 );
@@ -231,7 +233,7 @@ export const Landing: React.FC = () => {
                   ].map(([name,sub,text,Icon])=>{const I=Icon as React.ElementType; return <div key={name as string} className="rounded-xl border border-white/[0.07] bg-[#0b0c0d] p-5 transition hover:border-white/15 hover:bg-white/[0.035]"><div className="flex items-center gap-3"><I className="h-4 w-4 text-white/50"/><span className="font-mono text-[11px] text-white/65">{name as string}</span></div><div className="mt-2 text-[13px] font-medium">{sub as string}</div><p className="mt-1.5 text-[12px] leading-5 text-white/35">{text as string}</p></div>})}
                 </div>
               </div>
-            </div>            </div>
+            </div>
           </div>
         </section>
 
