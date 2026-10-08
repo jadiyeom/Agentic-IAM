@@ -6,11 +6,7 @@ const demo = () => localStorage.setItem('steerpast-iam-auth','true');
 const contactHref = 'mailto:' + ['omjadiye','steerpast.com'].join('@');
 
 const SteerpastMark = ({className='h-7 w-7'}:{className?:string}) => (
-  <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-    <defs><linearGradient id="steerpast-mark-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f4ffd0"/><stop offset="0.48" stopColor="#b7ff49"/><stop offset="1" stopColor="#00ed4f"/></linearGradient></defs>
-    <path fill="url(#steerpast-mark-gradient)" d="M5 4h31c14 0 23 10 23 24 0 12-7 20-18 24l-1-8c7-3 10-8 10-16 0-8-5-13-14-13H16c-7 0-10 3-11 9V4Z"/>
-    <path fill="#050505" d="M5 28c3-7 8-10 16-10h16c4 0 7 2 7 5s-2 5-7 5H20c-3 0-5 1-5 3 0 2 2 3 6 4l15 5c5 2 8 5 8 9 0 4-3 7-8 9L5 60l26-17c3-2 3-4 0-5l-18-6c-6-2-9-6-8-10v6Z"/>
-  </svg>
+  <img src="/steerpast-logo.png" alt="" aria-hidden="true" className={`shrink-0 rounded-[9px] object-cover ${className}`} />
 );
 
 const faqItems = [
