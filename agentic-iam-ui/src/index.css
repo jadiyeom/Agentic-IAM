@@ -7,7 +7,7 @@
 html { scroll-behavior: smooth; }
 body {
   @apply bg-surface text-slate-100;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter Tight', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @keyframes steerpast-fade-up {
@@ -64,5 +64,6 @@ body {
   background: linear-gradient(180deg, rgba(20,21,23,.96), rgba(12,13,15,.96));
   box-shadow: 0 24px 90px rgba(0,0,0,.28), 0 0 80px rgba(183,255,73,.06);
 }
-.landing-page .surface-soft { background: rgba(16,17,19,.84); }
+.surface-soft { background: linear-gradient(180deg, rgba(17,18,21,.88), rgba(11,12,14,.88)); }
+.landing-page .surface-soft { background: linear-gradient(180deg, rgba(17,18,21,.88), rgba(11,12,14,.88)); }
 .landing-page .lime-ring:focus-visible { outline: 2px solid rgba(183,255,73,.75); outline-offset: 3px; }
