@@ -96,7 +96,7 @@ export class AuditExplainabilityAgent {
         }
       );
       if (!response.ok) throw new Error('Hugging Face API error');
-      const data = await response.json();
+      const data: any = await response.json();
       // HF text-generation returns [{ generated_text: ... }] or { generated_text: ... }
       let text = '';
       if (Array.isArray(data) && data[0]?.generated_text) {

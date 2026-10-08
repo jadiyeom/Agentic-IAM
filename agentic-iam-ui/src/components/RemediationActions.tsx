@@ -1,103 +1,106 @@
 import React, { useState } from 'react';
-import { DecisionOutcome, IdentityViewModel, performRemediationAction } from '../services/iamApi';
-import { Ban, ClipboardList, ThumbsUp } from 'lucide-react';
+import { IdentityViewModel, performRemediationAction } from '../services/iamApi';
+import { Ban, Check, ClipboardList, Loader2, ThumbsUp, Wrench } from 'lucide-react';
+import { Card, CardHeader, EmptyState, OutcomeBadge, providerLabel } from './ui';
 
 interface Props {
   viewModel: IdentityViewModel | null;
   onActionCompleted?: () => void;
+  bare?: boolean;
 }
 
-export const RemediationActions: React.FC<Props> = ({ viewModel, onActionCompleted }) => {
-  const [loading, setLoading] = useState<DecisionOutcome | 'IGNORE' | null>(null);
+type Action = 'REVOKE_ACCESS' | 'SEND_FOR_REVIEW' | 'IGNORE';
+
+const actions: { id: Action; label: string; hint: string; Icon: React.ElementType; cls: string }[] = [
+  { id: 'REVOKE_ACCESS', label: 'Revoke access', hint: 'Remove the risky entitlement', Icon: Ban, cls: 'border-red-400/25 text-red-200 hover:border-red-400/45 hover:bg-red-400/[0.08]' },
+  { id: 'SEND_FOR_REVIEW', label: 'Send for review', hint: 'Route to an access reviewer', Icon: ClipboardList, cls: 'border-amber-300/25 text-amber-200 hover:border-amber-300/45 hover:bg-amber-300/[0.07]' },
+  { id: 'IGNORE', label: 'Override', hint: 'Keep access, log the reason', Icon: ThumbsUp, cls: 'border-white/10 text-white/75 hover:border-white/25 hover:bg-white/[0.05]' },
+];
+
+export const RemediationActions: React.FC<Props> = ({ viewModel, onActionCompleted, bare = false }) => {
+  const [loading, setLoading] = useState<Action | null>(null);
+  const [done, setDone] = useState<Action | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState('');
 
   if (!viewModel) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-700/80 bg-surfaceAlt/60 p-4 text-xs text-slate-500">
-        Select an identity to trigger remediation actions against the current decision.
-      </div>
+      <Card>
+        <EmptyState icon={<Wrench className="h-4 w-4" />} title="No identity selected" text="Select an identity to act on its current decision." />
+      </Card>
     );
   }
 
   const decision = viewModel.decision;
 
-  async function trigger(action: 'REVOKE_ACCESS' | 'SEND_FOR_REVIEW' | 'IGNORE') {
+  async function trigger(action: Action) {
     try {
-      setLoading(action === 'IGNORE' ? 'IGNORE' : decision.outcome);
+      setLoading(action);
+      setDone(null);
       setError(null);
       await performRemediationAction({
-        identityId: viewModel.identity.id,
+        identityId: viewModel!.identity.id,
         action,
         decisionOutcome: decision.outcome,
         reason: action === 'IGNORE' ? reason || 'Explicit human override' : undefined,
       });
-      if (onActionCompleted) onActionCompleted();
+      setDone(action);
+      onActionCompleted?.();
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
-      setError('Failed to apply remediation; see console for details.');
+      setError('The action could not be applied. Nothing was changed.');
     } finally {
       setLoading(null);
     }
   }
 
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-surfaceAlt/90 p-4 shadow-lg">
-      <div className="mb-1 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-50">Remediation Controls</h3>
-          <p className="text-xs text-slate-400">
-            Execute or override the agent&apos;s recommendation for this identity.
-          </p>
-        </div>
+  const body = (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 text-[12px] text-white/55">
+        Current decision <OutcomeBadge outcome={decision.outcome} />
+        <span className="text-white/40">· {Math.round(decision.confidence * 100)}% · {providerLabel(decision.decisionProvider)}</span>
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        <button
-          type="button"
-          onClick={() => trigger('REVOKE_ACCESS')}
-          disabled={loading !== null}
-          className="flex flex-col items-center gap-1 rounded-lg border border-danger/70 bg-danger/15 px-2 py-2 text-[11px] font-medium text-danger hover:bg-danger/25 disabled:opacity-60"
-        >
-          <Ban className="h-4 w-4" />
-          Revoke Access
-        </button>
-        <button
-          type="button"
-          onClick={() => trigger('SEND_FOR_REVIEW')}
-          disabled={loading !== null}
-          className="flex flex-col items-center gap-1 rounded-lg border border-amber-500/70 bg-amber-500/15 px-2 py-2 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 disabled:opacity-60"
-        >
-          <ClipboardList className="h-4 w-4" />
-          Send for Review
-        </button>
-        <button
-          type="button"
-          onClick={() => trigger('IGNORE')}
-          disabled={loading !== null}
-          className="flex flex-col items-center gap-1 rounded-lg border border-emerald-500/70 bg-emerald-500/10 px-2 py-2 text-[11px] font-medium text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-60"
-        >
-          <ThumbsUp className="h-4 w-4" />
-          Ignore (Override)
-        </button>
+      <div className="grid gap-2 sm:grid-cols-3">
+        {actions.map(({ id, label, hint, Icon, cls }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => trigger(id)}
+            disabled={loading !== null}
+            className={`group flex flex-col items-start gap-2 rounded-xl border bg-white/[0.015] p-3.5 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${cls}`}
+          >
+            <span className="flex w-full items-center justify-between">
+              {loading === id ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : done === id ? <Check className="h-4 w-4" aria-hidden="true" /> : <Icon className="h-4 w-4" aria-hidden="true" />}
+            </span>
+            <span className="text-[13px] font-medium">{label}</span>
+            <span className="text-[11px] leading-4 text-white/45">{hint}</span>
+          </button>
+        ))}
       </div>
-      <div className="mt-1 text-[11px] text-slate-400">
-        Decision: <span className="font-semibold text-slate-100">{decision.outcome}</span> (
-        {Math.round(decision.confidence * 100)}% confidence,{' '}
-        {decision.decisionProvider === 'claude'
-          ? 'Claude'
-          : decision.decisionProvider === 'huggingface'
-            ? 'Hugging Face'
-            : 'heuristic'}).
+      <label className="block">
+        <span className="mb-1.5 block text-[11px] font-medium text-white/55">Override justification <span className="text-white/35">(stored in the remediation log)</span></span>
+        <textarea
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+          rows={2}
+          placeholder="Why should this access stay in place?"
+          className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[12px] text-white outline-none transition placeholder:text-white/30 focus:border-[#b7ff49]/40 focus:bg-white/[0.04]"
+        />
+      </label>
+      <div aria-live="polite" className="min-h-[18px] text-[12px]">
+        {error && <span className="text-red-300">{error}</span>}
+        {done && !error && <span className="text-[#d0ff88]">Action recorded. The decision was re-evaluated.</span>}
       </div>
-      <textarea
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Optional justification when overriding the decision. This is stored in the remediation log."
-        className="mt-1 h-16 w-full rounded-md border border-slate-700 bg-slate-950/70 px-2 py-1 text-[11px] text-slate-100 placeholder:text-slate-500 focus:border-accent focus:outline-none"
-      />
-      {error && <div className="text-[11px] text-danger">{error}</div>}
     </div>
   );
-};
 
+  if (bare) return body;
+
+  return (
+    <Card>
+      <CardHeader icon={<Wrench className="h-4 w-4" />} title="Remediation" subtitle="Execute or override the recommendation. Every action is audited." />
+      <div className="p-5">{body}</div>
+    </Card>
+  );
+};

@@ -1,81 +1,112 @@
 import React from 'react';
 import { IdentityViewModel } from '../services/iamApi';
-import { FileText, ShieldAlert } from 'lucide-react';
+import { FileText, ShieldAlert, ShieldCheck, Gauge } from 'lucide-react';
+import { Card, CardHeader, EmptyState, Meter, humanize, providerLabel, riskTier, tierStyles } from './ui';
 
 interface Props {
   viewModel: IdentityViewModel | null;
 }
 
-export const ExplainabilityPanel: React.FC<Props> = ({ viewModel }) => {
-  if (!viewModel) {
-    return (
-      <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-700/80 bg-surfaceAlt/60 p-4 text-xs text-slate-500">
-        Select an identity to inspect agent reasoning, policy violations, and audit trail.
-      </div>
-    );
-  }
+const factorLabels: Record<string, string> = {
+  roleSensitivityScore: 'Role sensitivity',
+  seniorityAlignmentScore: 'Seniority alignment',
+  peerAnomalyScore: 'Peer anomaly',
+  historicalChangeScore: 'Historical change',
+};
 
-  const { identity, audit, policy, risk } = viewModel;
+const severityCls: Record<string, string> = {
+  CRITICAL: 'border-red-400/30 bg-red-400/[0.08] text-red-200',
+  HIGH: 'border-orange-400/25 bg-orange-400/[0.07] text-orange-200',
+  MEDIUM: 'border-amber-300/25 bg-amber-300/[0.06] text-amber-200',
+  LOW: 'border-white/10 bg-white/[0.04] text-white/70',
+};
 
+export const RiskFactors: React.FC<{ viewModel: IdentityViewModel }> = ({ viewModel }) => {
+  const tier = riskTier(viewModel.risk.riskScore, viewModel.anomaly);
   return (
-    <div className="flex h-full flex-col gap-3 rounded-xl border border-slate-700 bg-surfaceAlt/90 p-4 shadow-lg">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-50">Explainability & Audit</h3>
-          <p className="text-xs text-slate-400">
-            Why the system considered this identity risky and how the decision was made.
-          </p>
+    <div className="space-y-3.5">
+      {Object.entries(viewModel.risk.factors).map(([key, value]) => (
+        <div key={key}>
+          <div className="mb-1.5 flex items-center justify-between text-[12px]">
+            <span className="text-white/65">{factorLabels[key] ?? humanize(key)}</span>
+            <span className="tabular-nums text-white/50">{Number(value).toFixed(0)}</span>
+          </div>
+          <Meter value={Number(value)} max={100} barClassName={Number(value) > 0 ? tierStyles[tier].bar : 'bg-white/20'} label={factorLabels[key] ?? key} />
         </div>
-        <div className="rounded-full bg-slate-900/80 px-3 py-1 text-[10px] text-slate-400">
-          {new Date(audit.timestamp).toLocaleTimeString()}
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-xs">
-        <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-slate-100">
-          <ShieldAlert className="h-3.5 w-3.5 text-danger" />
-          Policy Violations ({policy.violations.length})
-        </div>
-        {policy.violations.length === 0 ? (
-          <p className="text-[11px] text-emerald-300">No violations. Access profile appears compliant.</p>
-        ) : (
-          <ul className="space-y-1.5">
-            {policy.violations.map((v) => (
-              <li key={v.id} className="rounded border border-slate-700/70 bg-slate-950/60 px-2 py-1">
-                <div className="flex items-center justify-between text-[10px] uppercase tracking-wide">
-                  <span className="text-slate-300">{v.policyType}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 ${
-                      v.severity === 'CRITICAL'
-                        ? 'bg-red-500/20 text-red-300'
-                        : v.severity === 'HIGH'
-                        ? 'bg-orange-500/20 text-orange-200'
-                        : 'bg-yellow-500/10 text-yellow-200'
-                    }`}
-                  >
-                    {v.severity}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[11px] text-slate-200">{v.description}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="flex-1 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-xs">
-        <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-slate-100">
-          <FileText className="h-3.5 w-3.5 text-accent" />
-          Natural-Language Explanation
-        </div>
-        <p className="mb-1 text-[11px] text-slate-300">{audit.explanation}</p>
-        <p className="mt-2 text-[10px] text-slate-500">
-          Identity {identity.name} ({identity.attributes.title}, {identity.attributes.department}) evaluated with risk{' '}
-          {risk.riskScore}. Decision: {audit.decision.outcome} ({Math.round(audit.decision.confidence * 100)}%
-          confidence).
-        </p>
-      </div>
+      ))}
     </div>
   );
 };
 
+export const PolicyViolations: React.FC<{ viewModel: IdentityViewModel }> = ({ viewModel }) => {
+  const { violations } = viewModel.policy;
+  if (violations.length === 0) {
+    return (
+      <div className="flex items-start gap-3 rounded-xl border border-emerald-400/15 bg-emerald-400/[0.04] px-4 py-3">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+        <div>
+          <div className="text-[13px] font-medium text-emerald-100">No policy violations</div>
+          <p className="mt-0.5 text-[12px] leading-5 text-white/55">Least-privilege, separation-of-duties and eligibility checks all passed.</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-2">
+      {violations.map(v => (
+        <li key={v.id} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-white/55">{v.policyType.replace(/_/g, ' ')}</span>
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${severityCls[v.severity] ?? severityCls.LOW}`}>{v.severity.toLowerCase()}</span>
+          </div>
+          <p className="mt-1.5 text-[12px] leading-5 text-white/75">{v.description}</p>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export const ExplainabilityPanel: React.FC<Props> = ({ viewModel }) => {
+  if (!viewModel) {
+    return (
+      <Card>
+        <EmptyState icon={<FileText className="h-4 w-4" />} title="Nothing selected" text="Select an identity to inspect agent reasoning, policy checks and the audit narrative." />
+      </Card>
+    );
+  }
+
+  const { audit, risk } = viewModel;
+  const tier = riskTier(risk.riskScore, viewModel.anomaly);
+
+  return (
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader
+          icon={<Gauge className="h-4 w-4" />}
+          title="Risk composition"
+          subtitle="How RiskAgent arrived at the composite score."
+          action={<span className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-medium tabular-nums ${tierStyles[tier].chip}`}>{risk.riskScore} · {tierStyles[tier].label}</span>}
+        />
+        <div className="p-5"><RiskFactors viewModel={viewModel} /></div>
+      </Card>
+
+      <Card>
+        <CardHeader icon={<ShieldAlert className="h-4 w-4" />} title="Policy evaluation" subtitle={`${viewModel.policy.violations.length} violation${viewModel.policy.violations.length === 1 ? '' : 's'} found by PolicyAgent.`} />
+        <div className="p-5"><PolicyViolations viewModel={viewModel} /></div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          icon={<FileText className="h-4 w-4" />}
+          title="Decision narrative"
+          subtitle={`${providerLabel(audit.decision.decisionProvider)} · ${Math.round(audit.decision.confidence * 100)}% confidence`}
+          action={<time className="whitespace-nowrap rounded-full border border-white/10 px-2.5 py-1 font-mono text-[10px] text-white/50" dateTime={new Date(audit.timestamp).toISOString()}>{new Date(audit.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time>}
+        />
+        <div className="space-y-4 p-5">
+          <blockquote className="border-l-2 border-[#b7ff49]/50 pl-4 text-[13px] leading-6 text-white/80">{audit.decision.rationale}</blockquote>
+          <p className="text-[12px] leading-6 text-white/55">{audit.explanation}</p>
+        </div>
+      </Card>
+    </div>
+  );
+};

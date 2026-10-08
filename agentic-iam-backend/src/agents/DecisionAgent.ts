@@ -138,7 +138,7 @@ export class DecisionAgent {
         }),
       });
       if (!response.ok) throw new Error('Hugging Face API error');
-      const data = await response.json();
+      const data: any = await response.json();
       let message = '';
       if (Array.isArray(data) && data[0]?.generated_text) {
         message = data[0].generated_text;

@@ -21,9 +21,9 @@ export const Security: React.FC = () => (
         const I = Icon as React.ElementType;
         return (
           <div key={title as string} className="bg-[#0b0c0d] p-7">
-            <I className="h-4 w-4 text-white/45"/>
+            <I className="h-4 w-4 text-white/65"/>
             <h2 className="mt-5 text-[14px] font-medium">{title as string}</h2>
-            <p className="mt-2 max-w-3xl text-[12px] leading-6 text-white/30">{text as string}</p>
+            <p className="mt-2 max-w-3xl text-[12px] leading-6 text-white/50">{text as string}</p>
           </div>
         );
       })}
@@ -31,7 +31,7 @@ export const Security: React.FC = () => (
 
     <div className="mt-8 rounded-2xl border border-amber-300/10 bg-amber-300/[0.025] p-7">
       <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-200/50">Current status</div>
-      <p className="mt-3 text-[12px] leading-6 text-white/30">Steerpast does not currently claim SOC 2, ISO 27001, or another external certification on this site. As production adoption grows, formal security controls and independent assurance can be added alongside customer requirements.</p>
+      <p className="mt-3 text-[12px] leading-6 text-white/50">Steerpast does not currently claim SOC 2, ISO 27001, or another external certification on this site. As production adoption grows, formal security controls and independent assurance can be added alongside customer requirements.</p>
     </div>
   </PublicLayout>
 );
