@@ -1,26 +1,77 @@
-## Agentic IAM Platform (Backend + UI)
+# Steerpast IAM
 
-This workspace contains a research-grade, agentic Identity & Access Management system implemented in TypeScript.
+Steerpast IAM is an identity security control plane for human, service, and AI-agent identities.
 
-- **Backend (`agentic-iam-backend`)**: Node.js/Express service hosting IAM domain models and autonomous agents:
-  - `IdentityMonitoringAgent` tracks identities, roles, entitlements, and state history.
-  - `RiskEvaluationAgent` computes contextual 0–100 risk scores using role sensitivity, seniority alignment, peer-group comparison, and historical volatility.
-  - `PolicyComplianceAgent` enforces least privilege, segregation of duties (SoD), and role eligibility.
-  - `DecisionAgent` fuses risk, policy, and identity context into reasoned outcomes (APPROVE, FLAG_FOR_REVIEW, RECOMMEND_REVOCATION, AUTO_REMEDIATE), optionally using OpenAI for truly agentic behavior.
-  - `RemediationAgent` executes revocations/downgrades and creates review tasks, emitting an audit log.
-  - `AuditExplainabilityAgent` generates human-readable explanations for each decision and maintains an audit trail.
-  - `IAMOrchestrator` coordinates all agents and exposes a JSON API, plus anomaly simulation and metrics.
+It connects identity context, contextual risk, policy evaluation, model-assisted decisioning, remediation, and audit evidence into one inspectable workflow.
 
-- **Frontend (`agentic-iam-ui`)**: React + TypeScript dashboard:
-  - Identity overview table with anomaly highlighting and risk badges.
-  - Detail side panel with violated policies, decision outcome, and explainability text.
-  - Animated decision flow (Identity → Risk → Policy → Decision) using Framer Motion and Recharts.
-  - Remediation controls (revoke, review, ignore with justification) wired to backend APIs.
-  - Research metrics panel for anomaly detection counts, overrides, and mean decision time.
+## Live product
 
-### Running the system
+- Landing: https://steerpast.com/
+- Claude integration: https://steerpast.com/claude
+- Security model: https://steerpast.com/security
+- Company: https://steerpast.com/company
 
-1. **Start the backend**:
+The public demo uses seeded/sample identities and does not require a production identity-provider connection.
+
+## Architecture
+
+The backend is a TypeScript / Node.js / Express service organized around specialized agents:
+
+- **IdentityAgent** — identity and entitlement context
+- **RiskAgent** — contextual 0–100 risk evaluation
+- **PolicyAgent** — least privilege, role eligibility, and policy constraints
+- **DecisionAgent** — decision synthesis with optional Claude integration
+- **RemediationAgent** — controlled corrective actions
+- **AuditAgent** — evidence and decision history
+- **IAMOrchestrator** — coordinates the end-to-end workflow
+
+The frontend is React + TypeScript with a security workspace for identities, entitlements, explainability/audit, and system metrics.
+
+## Claude integration
+
+When `ANTHROPIC_API_KEY` is configured on the backend, `DecisionAgent` calls the Claude Messages API using the model alias configured by `ANTHROPIC_MODEL` (default: `claude-sonnet-4-5`).
+
+The model receives structured identity/risk/policy context and is asked for:
+
+- one supported decision outcome
+- a concise rationale
+- a confidence score
+
+The response is validated before becoming a decision:
+
+- outcome must be one of `APPROVE`, `FLAG_FOR_REVIEW`, `RECOMMEND_REVOCATION`, or `AUTO_REMEDIATE`
+- rationale must be non-empty
+- confidence must be numeric and bounded to 0–1
+
+If the Claude call fails or returns malformed output, the system falls back to deterministic heuristics rather than emitting an unvalidated model decision.
+
+The public UI exposes the resulting `decisionProvider` so an operator can distinguish Claude-backed decisions from other providers.
+
+## Demo scenario
+
+The canonical demo is an intern receiving `production-db.admin`.
+
+The workflow demonstrates:
+
+1. identity context
+2. contextual risk
+3. policy conflict
+4. model-assisted decisioning
+5. remediation controls
+6. retained evidence
+
+## Security posture
+
+The public demonstration intentionally uses sample data.
+
+- API credentials are expected to remain server-side environment variables.
+- Model output is validated before entering remediation.
+- Sensitive remediation remains operator-controlled.
+- The project does not claim SOC 2, ISO 27001, or other external certification on the public site.
+
+## Local development
+
+### Backend
 
 ```bash
 cd agentic-iam-backend
@@ -29,7 +80,7 @@ npm run build
 npm start
 ```
 
-2. **Start the UI** (in a second terminal):
+### Frontend
 
 ```bash
 cd agentic-iam-ui
@@ -37,10 +88,13 @@ npm install
 npm run dev
 ```
 
-3. Open the dashboard (default Vite port is `5173`) and use the red
-   “Simulate Intern → Prod DB Admin” button to trigger the classic anomaly
-   scenario. Watch risk, policy violations, decision outcome, and explanation
-   update end-to-end.
+Configure the backend environment when using Claude:
 
-Set `OPENAI_API_KEY` in `agentic-iam-backend/.env` to enable LLM-backed decisioning and explainability; without it the system falls back to deterministic heuristics while preserving the same JSON contracts.
+```bash
+ANTHROPIC_API_KEY=...
+ANTHROPIC_MODEL=claude-sonnet-4-5
+```
 
+## Why the repository is public
+
+The product is early-stage and intentionally reviewable. The public repository exposes the orchestration, decision path, deployment configuration, and frontend demo so technical reviewers can inspect how the system works rather than relying on marketing claims alone.
