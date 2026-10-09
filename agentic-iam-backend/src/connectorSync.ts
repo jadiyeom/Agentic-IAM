@@ -148,7 +148,7 @@ async function okta(): Promise<ConnectorSnapshot> {
   const warnings:string[]=[];
   async function collect(path:string,label:string):Promise<any[]>{
     const out:any[]=[]; let next:string|undefined=base+path;
-    try {while(next&&out.length<5000){const response: Response = await fetch(next,{headers:h,signal:timeout()});if(!response.ok)throw new Error('HTTP '+response.status);out.push(...arr(await response.json()));const linkHeader: string | null = response.headers.get('link');const nextLink: string | undefined = linkHeader?.split(',').find((part: string)=>part.includes('rel="next"'))?.match(/<([^>]+)>/)?.[1];next=nextLink;}}
+    try {while(next&&out.length<5000){const response: globalThis.Response = await fetch(next,{headers:h,signal:timeout()});if(!response.ok)throw new Error('HTTP '+response.status);out.push(...arr(await response.json()));const linkHeader: string | null = response.headers.get('link');const nextLink: string | undefined = linkHeader?.split(',').find((part: string)=>part.includes('rel="next"'))?.match(/<([^>]+)>/)?.[1];next=nextLink;}}
     catch(e){warnings.push(label+': '+(e instanceof Error?e.message:'unavailable'));}
     return out;
   }
@@ -215,7 +215,7 @@ async function github():Promise<ConnectorSnapshot>{
   const warnings:string[]=[];
   async function collect(path:string,label:string):Promise<any[]>{
     const out:any[]=[];let next:string|undefined='https://api.github.com'+path;
-    try{while(next&&out.length<5000){const res=await fetch(next,{headers:h,signal:timeout()});if(!res.ok)throw new Error('HTTP '+res.status);out.push(...arr(await res.json()));const link=res.headers.get('link');const match=link?.split(',').find(s=>s.includes('rel="next"'));next=match?.match(/<([^>]+)>/)?.[1];}}
+    try{while(next&&out.length<5000){const response: globalThis.Response = await fetch(next,{headers:h,signal:timeout()});if(!response.ok)throw new Error('HTTP '+response.status);out.push(...arr(await response.json()));const linkHeader: string | null = response.headers.get('link');const nextLink: string | undefined = linkHeader?.split(',').find((part: string)=>part.includes('rel="next"'))?.match(/<([^>]+)>/)?.[1];next=nextLink;}}
     catch(e){warnings.push(label+': '+(e instanceof Error?e.message:'unavailable'));}
     return out;
   }
