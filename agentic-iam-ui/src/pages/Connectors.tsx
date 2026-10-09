@@ -25,6 +25,8 @@ const Connectors: React.FC = () => {
   const [loading,setLoading]=useState(true);
   const [activeTab,setActiveTab]=useState<'identities'|'resources'|'events'>('identities');
   const [selectedId,setSelectedId]=useState('');
+  // This is a UI-mode hint only, not an authorization boundary. The backend must enforce access separately.
+  const isSyntheticDemo = localStorage.getItem('steerpast-iam-demo-mode') === 'synthetic';
 
   const refresh=useCallback(async()=>{
     const [list,summary]=await Promise.all([
@@ -37,6 +39,7 @@ const Connectors: React.FC = () => {
   useEffect(()=>{refresh().catch(e=>setErrors({page:e?.message||'Could not load connector registry'})).finally(()=>setLoading(false));},[refresh]);
 
   const sync=async(id:string)=>{
+    if (isSyntheticDemo) return;
     setBusy(s=>({...s,[id]:true}));setErrors(s=>({...s,[id]:''}));
     try{
       const res=await axios.post<Snapshot>('/api/connectors/'+encodeURIComponent(id)+'/sync',{}, {timeout:120000});
@@ -63,6 +66,9 @@ const Connectors: React.FC = () => {
     <div className="animate-rise">
       <PageHeader eyebrow="Workspace / Integrations" title="Live connectors" description="Connect identity and access sources, sync a live snapshot, and inspect identities, resources and audit activity. Credentials stay on the backend." icon={<Plug className="h-5 w-5"/>} actions={<button onClick={()=>refresh().catch(()=>undefined)} className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 px-3.5 text-[12px] text-white/70 hover:border-white/20 hover:text-white"><RefreshCw className="h-3.5 w-3.5"/>Refresh</button>}/>
       {errors.page&&<div role="alert" className="mt-4 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-3 text-[12px] text-red-200">{errors.page}</div>}
+      {isSyntheticDemo && <div role="status" className="mt-5 rounded-2xl border border-amber-200/20 bg-amber-200/[0.045] p-4 sm:p-5">
+        <div className="flex items-start gap-3"><div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border border-amber-200/15 bg-amber-200/[0.06] text-amber-100"><CircleAlert className="h-4 w-4"/></div><div className="min-w-0"><h2 className="text-[13px] font-medium text-amber-50">Synthetic demo mode</h2><p className="mt-1 text-[12px] leading-5 text-white/60">These connector cards describe supported integrations; they do not mean a provider is connected to your account. Live source authorization is not available in this milestone, and sync is disabled in this demo.</p><p className="mt-2 text-[11px] text-white/45">No provider credentials are requested here. Choose live-source setup when per-user authorization becomes available.</p></div></div>
+      </div>}
       <div className="grid grid-cols-2 gap-3 py-6 lg:grid-cols-4">
         <StatCard label="Available sources" value={loading?'–':connectors.length} detail="Provider adapters" icon={<Plug/>}/>
         <StatCard label="Configured" value={loading?'–':connectors.filter(c=>c.configured).length} detail="Credentials detected" icon={<ShieldCheck/>} tone="lime"/>
@@ -91,7 +97,7 @@ const Connectors: React.FC = () => {
                 {errors[connector.id]&&<p role="alert" className="mt-3 text-[11px] text-red-200">{errors[connector.id]}</p>}
                 {snapshot?.warnings?.length>0&&<p className="mt-2 text-[11px] text-amber-100/80">{snapshot.warnings.length} data source warning(s). Inspect the snapshot details.</p>}
                 <div className="mt-4 flex gap-2">
-                  <button disabled={!connector.configured||isBusy} onClick={()=>sync(connector.id)} className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#b7ff49] px-4 text-[12px] font-semibold text-[#08090b] transition hover:bg-[#c8ff79] disabled:cursor-not-allowed disabled:opacity-40">{isBusy?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<RefreshCw className="h-3.5 w-3.5"/>}{isBusy?'Syncing…':'Sync now'}</button>
+                  <button disabled={isSyntheticDemo||!connector.configured||isBusy} onClick={()=>sync(connector.id)} className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#b7ff49] px-4 text-[12px] font-semibold text-[#08090b] transition hover:bg-[#c8ff79] disabled:cursor-not-allowed disabled:opacity-40">{isBusy?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<RefreshCw className="h-3.5 w-3.5"/>}{isBusy?'Syncing…':'Sync now'}</button>
                   <button onClick={()=>loadSnapshot(connector.id)} disabled={!summary} className="h-9 rounded-full border border-white/10 px-4 text-[12px] text-white/65 hover:border-white/20 hover:text-white disabled:opacity-30">View data</button>
                 </div>
               </article>;
