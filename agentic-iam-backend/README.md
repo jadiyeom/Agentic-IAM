@@ -19,12 +19,15 @@ Connector endpoints:
 - **GET `/api/connectors`**: List providers and readiness without exposing secrets.
 - **GET `/api/connectors/:id/status`**: Check one provider's setup status.
 - **POST `/api/connectors/:id/test`**: Perform a minimal live read-only API check.
+- **POST `/api/connectors/:id/sync`**: Fetch a normalized live snapshot of supported identities, groups/resources, role assignments and audit events.
+- **GET `/api/connectors/:id/data`**: Return a snapshot from the current backend process.
+- **GET `/api/connectors/snapshots`**: List available snapshot summaries.
 
 Supported IDs: `entra`, `google-workspace`, `okta`, `aws-iam`, `github`.
 
 Copy `agentic-iam-backend/.env.example` as a reference and configure credentials in your local secret environment or deployment settings. Never commit real keys. See [Live connector onboarding](../docs/live-connectors.md) for provider setup, least-privilege guidance, and current scope.
 
-**Important:** This is the first onboarding layer (registry, readiness and live connection tests). Full directory ingestion, incremental sync, event subscriptions, and connected-source UI are not implemented yet.
+The workspace includes a Live connectors page at `/connectors` for provider setup status, manual sync, normalized records and audit-event inspection. Current sync is on-demand; snapshots are process-memory only and will not survive restarts or reliably persist across serverless instances. Incremental cursors, scheduled/background sync, durable database storage and broader per-resource permission assignments remain production hardening work.
 
 ### API
 
