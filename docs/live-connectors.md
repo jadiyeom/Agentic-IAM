@@ -32,7 +32,7 @@ Enable the Admin SDK Directory API, configure domain-wide delegation, and author
 - `OKTA_ORG_URL` (for example, `https://your-org.okta.com`)
 - `OKTA_API_TOKEN`
 
-Use a dedicated least-privilege service account and a read-only API token. The test requests at most one user.
+Use a dedicated least-privilege service account and a read-only API token. The test requests at most one user. Sync reads users, groups, apps and the last seven days of System Log events.
 
 ### AWS IAM
 - `AWS_ACCESS_KEY_ID`
@@ -40,7 +40,7 @@ Use a dedicated least-privilege service account and a read-only API token. The t
 - `AWS_REGION` (for example, `us-east-1`)
 - Optional: `AWS_SESSION_TOKEN` for temporary credentials
 
-Use a dedicated IAM principal with only the read permissions required for the enabled sync jobs. The test calls IAM `GetUser`; if the credential represents a role/session without an IAM user, use a principal whose test permissions and identity model are appropriate. Do not use root credentials.
+Use a dedicated IAM principal with only the read permissions required for the enabled sync jobs. The test calls IAM `GetUser`; if the credential represents a role/session without an IAM user, use a principal whose test permissions and identity model are appropriate. Do not use root credentials. Sync lists IAM users, roles and policies; CloudTrail is a separate follow-up.
 
 ### GitHub
 - `GITHUB_TOKEN`
