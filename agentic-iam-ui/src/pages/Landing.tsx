@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { CountUp, EASE_OUT, Magnetic, Reveal, ScrollProgress, Spotlight, Stagger, StaggerItem, TiltIn, rise, stagger } from '../components/motion';
 import { Menu, X, ArrowRight, Bot, ShieldCheck, Activity, Lock, GitBranch, Eye, AlertTriangle, Check, ChevronRight, Database, KeyRound, Sparkles, Fingerprint, Network, ScanSearch, Plus, Cpu, ServerCog, ArrowUpRight } from 'lucide-react';
 
-const demo = () => localStorage.setItem('steerpast-iam-auth','true');
+const demo = () => {}; // Demo mode is selected on /demo; do not create a workspace session from the landing page.
 
 const contactHref = '/company#contact';
 
