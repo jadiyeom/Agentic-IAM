@@ -24,6 +24,7 @@ const Connectors: React.FC = () => {
   const [errors,setErrors]=useState<Record<string,string>>({});
   const [loading,setLoading]=useState(true);
   const [activeTab,setActiveTab]=useState<'identities'|'resources'|'events'>('identities');
+  const [selectedId,setSelectedId]=useState('');
 
   const refresh=useCallback(async()=>{
     const [list,summary]=await Promise.all([
@@ -39,7 +40,7 @@ const Connectors: React.FC = () => {
     setBusy(s=>({...s,[id]:true}));setErrors(s=>({...s,[id]:''}));
     try{
       const res=await axios.post<Snapshot>('/api/connectors/'+encodeURIComponent(id)+'/sync',{}, {timeout:120000});
-      setSnapshots(s=>({...s,[id]:res.data}));
+      setSnapshots(s=>({...s,[id]:res.data}));setSelectedId(id);
       await refresh();
     }catch(e:any){
       const message=e?.response?.data?.error||e?.message||'Sync failed';
@@ -48,13 +49,13 @@ const Connectors: React.FC = () => {
   };
 
   const loadSnapshot=async(id:string)=>{
-    try{const res=await axios.get<Snapshot>('/api/connectors/'+encodeURIComponent(id)+'/data');setSnapshots(s=>({...s,[id]:res.data}));}
+    try{const res=await axios.get<Snapshot>('/api/connectors/'+encodeURIComponent(id)+'/data');setSnapshots(s=>({...s,[id]:res.data}));setSelectedId(id);}
     catch(e:any){setErrors(s=>({...s,[id]:e?.response?.data?.error||'No synced data yet'}));}
   };
 
   const currentSummary=(id:string)=>summaries.find(s=>s.connectorId===id);
   const currentSnapshot=(id:string)=>snapshots[id];
-  const selected=Object.keys(snapshots).find(id=>snapshots[id])||'';
+  const selected=selectedId || Object.keys(snapshots).find(id=>snapshots[id]) || '';
   const data=selected?snapshots[selected]:undefined;
   const rows: Array<Identity|Resource|Event> = !data?[]:activeTab==='identities'?data.identities:activeTab==='resources'?data.resources:data.events;
 
