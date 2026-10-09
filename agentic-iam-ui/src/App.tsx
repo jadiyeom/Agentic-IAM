@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Landing } from './pages/Landing';
+import { supabase } from './auth';
 
 // Everything past the landing page is split into its own chunk, so the
 // marketing page ships without the workspace, charts and tables.
@@ -13,6 +14,7 @@ const Claude = named(() => import('./pages/Claude'), 'Claude');
 const Security = named(() => import('./pages/Security'), 'Security');
 const Company = named(() => import('./pages/Company'), 'Company');
 const DemoIntro = named(() => import('./pages/DemoIntro'), 'DemoIntro');
+const Login = named(() => import('./pages/Login'), 'Login');
 const Privacy = named(() => import('./pages/Privacy'), 'Privacy');
 const Terms = named(() => import('./pages/Terms'), 'Terms');
 const Entitlements = React.lazy(() => import('./pages/Entitlements'));
@@ -29,8 +31,25 @@ import { CommandPalette, openCommandPalette } from './components/CommandPalette'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isAuthed = localStorage.getItem('steerpast-iam-auth') === 'true';
-  if (!isAuthed) return <Navigate to="/" state={{ from: location }} replace />;
+  const [status, setStatus] = React.useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+
+  React.useEffect(() => {
+    if (!supabase) {
+      setStatus('unauthenticated');
+      return;
+    }
+    let alive = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (alive) setStatus(data.session ? 'authenticated' : 'unauthenticated');
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (alive) setStatus(session ? 'authenticated' : 'unauthenticated');
+    });
+    return () => { alive = false; subscription.unsubscribe(); };
+  }, []);
+
+  if (status === 'loading') return <PageFallback />;
+  if (status !== 'authenticated') return <Navigate to="/login" state={{ from: location }} replace />;
   return <>{children}</>;
 }
 
@@ -45,8 +64,9 @@ const navItems = [
 const DemoNav: React.FC = () => {
   const navigate = useNavigate();
 
-  function exit() {
-    localStorage.removeItem('steerpast-iam-auth');
+  async function exit() {
+    await supabase?.auth.signOut();
+    localStorage.removeItem('steerpast-iam-demo-mode');
     navigate('/', { replace: true });
   }
 
@@ -190,7 +210,7 @@ const App: React.FC = () => (
     <React.Suspense fallback={<div className="min-h-screen bg-[#08090a]"><PageFallback /></div>}>
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/claude" element={<Claude />} />
       <Route path="/security" element={<Security />} />
       <Route path="/company" element={<Company />} />
