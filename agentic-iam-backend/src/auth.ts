@@ -12,6 +12,7 @@ function getAuthClient(): SupabaseClient | null {
 
 /** Fail closed: every API caller must present a valid Supabase access token. */
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (req.method === 'OPTIONS') { next(); return; }
   const authClient = getAuthClient();
   if (!authClient) {
     res.status(503).json({ error: 'Authentication is not configured on this deployment.' });
