@@ -8,7 +8,7 @@ export type SyncedIdentity = {
   roles: string[]; groups: string[]; rawId: string; updatedAt?: string;
 };
 export type SyncedResource = {
-  id: string; source: string; name: string; kind: 'group' | 'application' | 'role' | 'repository' | 'policy' | 'team';
+  id: string; source: string; name: string; kind: 'group' | 'application' | 'role' | 'repository' | 'policy' | 'team' | 'permission' | 'assignment';
   description?: string; risk?: 'low' | 'medium' | 'high'; members?: number;
 };
 export type SyncedEvent = {
@@ -61,20 +61,35 @@ async function entra(): Promise<ConnectorSnapshot> {
     } catch (e) { warnings.push(label + ': ' + (e instanceof Error ? e.message : 'unavailable')); }
     return all;
   }
-  const [users, groups, roles, apps, audits] = await Promise.all([
+  const [users, groups, roles, apps, audits, roleAssignments] = await Promise.all([
     pages('https://graph.microsoft.com/v1.0/users?$select=id,displayName,userPrincipalName,mail,accountEnabled,department,jobTitle,createdDateTime&$top=999', 'Users'),
     pages('https://graph.microsoft.com/v1.0/groups?$select=id,displayName,description,mailEnabled,securityEnabled&$top=999', 'Groups'),
     pages('https://graph.microsoft.com/v1.0/directoryRoles?$select=id,displayName,description', 'Directory roles'),
     pages('https://graph.microsoft.com/v1.0/servicePrincipals?$select=id,displayName,appId,accountEnabled,servicePrincipalType&$top=999', 'Service principals'),
-    pages('https://graph.microsoft.com/v1.0/auditLogs/directoryAudits?$top=100', 'Directory audit events')
+    pages('https://graph.microsoft.com/v1.0/auditLogs/directoryAudits?$top=100', 'Directory audit events'),
+    pages('https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments?$expand=principal,roleDefinition&$top=100', 'Role assignments')
   ]);
+  const groupMemberships = new Map<string, string[]>();
+  await Promise.all(groups.slice(0, 100).map(async g => {
+    try {
+      const members = await pages('https://graph.microsoft.com/v1.0/groups/' + encodeURIComponent(safe(g.id)) + '/members?$select=id&$top=999', 'Group membership');
+      for (const member of members) groupMemberships.set(safe(member.id), [...(groupMemberships.get(safe(member.id)) || []), safe(g.displayName)]);
+    } catch { /* provider warnings are recorded by pages */ }
+  }));
+  const assignedRoles = new Map<string, string[]>();
+  for (const assignment of roleAssignments) {
+    const principalId = safe(assignment.principalId || assignment.principal?.id);
+    const roleName = safe(assignment.roleDefinition?.displayName) || safe(assignment.roleDefinitionId);
+    if (principalId && roleName) assignedRoles.set(principalId, [...(assignedRoles.get(principalId) || []), roleName]);
+  }
   const identities: SyncedIdentity[] = [
-    ...users.map(u => ({ id:id('entra',safe(u.id)), rawId:safe(u.id), source:'entra', displayName:safe(u.displayName)||safe(u.userPrincipalName), email:safe(u.mail)||safe(u.userPrincipalName), status:u.accountEnabled===false?'disabled':'active', kind:'user' as const, department:safe(u.department), roles:[], groups:[], updatedAt:safe(u.createdDateTime) })),
+    ...users.map(u => ({ id:id('entra',safe(u.id)), rawId:safe(u.id), source:'entra', displayName:safe(u.displayName)||safe(u.userPrincipalName), email:safe(u.mail)||safe(u.userPrincipalName), status:u.accountEnabled===false?'disabled':'active', kind:'user' as const, department:safe(u.department), roles:assignedRoles.get(safe(u.id)) || [], groups:groupMemberships.get(safe(u.id)) || [], updatedAt:safe(u.createdDateTime) })),
     ...apps.map(a => ({ id:id('entra',safe(a.id)), rawId:safe(a.id), source:'entra', displayName:safe(a.displayName), status:a.accountEnabled===false?'disabled':'active', kind:'service' as const, roles:[], groups:[] }))
   ];
   const resources: SyncedResource[] = [
     ...groups.map(g => ({ id:id('entra-group',safe(g.id)), source:'entra', name:safe(g.displayName), kind:'group' as const, description:safe(g.description) })),
     ...roles.map(r => ({ id:id('entra-role',safe(r.id)), source:'entra', name:safe(r.displayName), kind:'role' as const, description:safe(r.description), risk:/global administrator|privileged|administrator/i.test(safe(r.displayName))?'high' as const:'medium' as const })),
+    ...roleAssignments.map(a => ({ id:id('entra-assignment',safe(a.id)), source:'entra', name:safe(a.roleDefinition?.displayName)||safe(a.roleDefinitionId), kind:'assignment' as const, description:'Assigned to '+(safe(a.principal?.displayName)||safe(a.principalId)), risk:/administrator|privileged/i.test(safe(a.roleDefinition?.displayName))?'high' as const:'medium' as const })),
     ...apps.map(a => ({ id:id('entra-app',safe(a.id)), source:'entra', name:safe(a.displayName), kind:'application' as const, description:safe(a.appId) }))
   ];
   const events: SyncedEvent[] = audits.map(a => ({ id:id('entra-audit',safe(a.id)||JSON.stringify(a)), source:'entra', timestamp:safe(a.activityDateTime), actor:safe(a.initiatedBy?.user?.userPrincipalName||a.initiatedBy?.app?.displayName), action:safe(a.activityDisplayName), target:arr(a.targetResources).map(t=>safe(t.displayName)).filter(Boolean).join(', '), severity:/delete|disable|remove|credential|role/i.test(safe(a.activityDisplayName))?'warning':'info', summary:safe(a.activityDisplayName)||'Directory activity' }));
@@ -104,15 +119,24 @@ async function google(): Promise<ConnectorSnapshot> {
     catch(e){warnings.push(label+': '+(e instanceof Error?e.message:'unavailable'));}
     return out;
   }
-  const [users,groups,orgs,activities]=await Promise.all([
+  const [users,groups,orgs,activities,roles,roleAssignments]=await Promise.all([
     collect('https://admin.googleapis.com/admin/directory/v1/users?customer=my_customer&maxResults=500','Users','users'),
     collect('https://admin.googleapis.com/admin/directory/v1/groups?customer=my_customer&maxResults=200','Groups','groups'),
     collect('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits?type=all','Organizational units','organizationUnits'),
-    collect('https://admin.googleapis.com/admin/reports/v1/activity/users/all/applications/admin?maxResults=100','Admin audit events','items')
+    collect('https://admin.googleapis.com/admin/reports/v1/activity/users/all/applications/admin?maxResults=100','Admin audit events','items'),
+    collect('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles','Admin roles','items'),
+    collect('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments?maxResults=200','Role assignments','items')
   ]);
-  const identities:SyncedIdentity[]=users.map(u=>({id:id('google',safe(u.id)),rawId:safe(u.id),source:'google-workspace',displayName:safe(u.name?.fullName)||safe(u.primaryEmail),email:safe(u.primaryEmail),status:u.suspended?'disabled':'active',kind:'user',department:safe(u.orgUnitPath),roles:arr(u.isAdmin?[{name:'Super Admin'}]:[]).map(r=>safe(r.name)),groups:[]}));
+  const googleGroups = new Map<string,string[]>();
+  await Promise.all(groups.slice(0,100).map(async g=>{
+    try { const members=await collect('https://admin.googleapis.com/admin/directory/v1/groups/'+encodeURIComponent(safe(g.email))+'/members?maxResults=200','Group membership','members'); for(const m of members) googleGroups.set(safe(m.email),[...(googleGroups.get(safe(m.email))||[]),safe(g.name)||safe(g.email)]); } catch { /* warnings recorded by collect */ }
+  }));
+  const googleRoles = new Map<string,string[]>();
+  for(const assignment of roleAssignments){const principal=safe(assignment.assignedTo);const role=roles.find(r=>String(r.roleId)===String(assignment.roleId));if(principal)googleRoles.set(principal,[...(googleRoles.get(principal)||[]),safe(role?.roleName)||safe(assignment.roleId)]);}
+  const identities:SyncedIdentity[]=users.map(u=>({id:id('google',safe(u.id)),rawId:safe(u.id),source:'google-workspace',displayName:safe(u.name?.fullName)||safe(u.primaryEmail),email:safe(u.primaryEmail),status:u.suspended?'disabled':'active',kind:'user',department:safe(u.orgUnitPath),roles:googleRoles.get(safe(u.id))|| (u.isAdmin?['Super Admin']:[]),groups:googleGroups.get(safe(u.primaryEmail))||[]}));
   const resources:SyncedResource[]=[
     ...groups.map(g=>({id:id('google-group',safe(g.id)),source:'google-workspace',name:safe(g.name)||safe(g.email),kind:'group' as const,description:safe(g.description)})),
+    ...roleAssignments.map(a=>({id:id('google-role-assignment',safe(a.roleAssignmentId)),source:'google-workspace',name:safe(roles.find(r=>String(r.roleId)===String(a.roleId))?.roleName)||safe(a.roleId),kind:'assignment' as const,description:'Assigned to '+safe(a.assignedTo)})),
     ...orgs.map(o=>({id:id('google-org',safe(o.orgUnitId),),source:'google-workspace',name:safe(o.name),kind:'group' as const,description:safe(o.orgUnitPath)}))
   ];
   const events:SyncedEvent[]=activities.map(a=>({id:id('google-audit',safe(a.id?.uniqueQualifier)||JSON.stringify(a)),source:'google-workspace',timestamp:safe(a.id?.time),actor:safe(a.actor?.email),action:safe(a.events?.map((e:any)=>e.name).join(', ')),target:safe(a.events?.flatMap((e:any)=>arr(e.parameters).map((p:any)=>p.value)).join(', ')),severity:/delete|suspend|admin|privilege|role/i.test(JSON.stringify(a.events))?'warning':'info',summary:safe(a.events?.map((e:any)=>e.name).join(', '))||'Admin activity'}));
@@ -132,7 +156,9 @@ async function okta(): Promise<ConnectorSnapshot> {
     collect('/api/v1/users?limit=200','Users'),collect('/api/v1/groups?limit=200','Groups'),
     collect('/api/v1/apps?limit=200','Applications'),collect('/api/v1/logs?since='+encodeURIComponent(new Date(Date.now()-7*86400000).toISOString())+'&limit=200','System Log')
   ]);
-  const identities:SyncedIdentity[]=users.map(u=>({id:id('okta',safe(u.id)),rawId:safe(u.id),source:'okta',displayName:safe(u.profile?.displayName)||[u.profile?.firstName,u.profile?.lastName].filter(Boolean).join(' '),email:safe(u.profile?.email)||safe(u.profile?.login),status:safe(u.status).toLowerCase()==='active'?'active':'disabled',kind:'user',department:safe(u.profile?.department),roles:[],groups:[]}));
+  const groupMemberships=new Map<string,string[]>();
+  await Promise.all(groups.slice(0,100).map(async g=>{const members=await collect('/api/v1/groups/'+encodeURIComponent(safe(g.id))+'/users?limit=200','Group membership');for(const member of members)groupMemberships.set(safe(member.id),[...(groupMemberships.get(safe(member.id))||[]),safe(g.profile?.name)]);}));
+  const identities:SyncedIdentity[]=users.map(u=>({id:id('okta',safe(u.id)),rawId:safe(u.id),source:'okta',displayName:safe(u.profile?.displayName)||[u.profile?.firstName,u.profile?.lastName].filter(Boolean).join(' '),email:safe(u.profile?.email)||safe(u.profile?.login),status:safe(u.status).toLowerCase()==='active'?'active':'disabled',kind:'user',department:safe(u.profile?.department),roles:[],groups:groupMemberships.get(safe(u.id))||[]}));
   const resources:SyncedResource[]=[
     ...groups.map(g=>({id:id('okta-group',safe(g.id)),source:'okta',name:safe(g.profile?.name),kind:'group' as const,description:safe(g.profile?.description)})),
     ...apps.map(a=>({id:id('okta-app',safe(a.id)),source:'okta',name:safe(a.label),kind:'application' as const,description:safe(a.name)}))
@@ -199,7 +225,9 @@ async function github():Promise<ConnectorSnapshot>{
     collect(prefix+'/teams?per_page=100','Teams'),
     collect(prefix+'/repos?per_page=100&sort=updated','Repositories')
   ]);
-  const identities:SyncedIdentity[]=members.map(u=>({id:id('github',safe(u.id)),rawId:safe(u.id),source:'github',displayName:safe(u.login),status:'active',kind:'user',roles:[],groups:[],updatedAt:safe(u.updated_at)}));
+  const teamMemberships=new Map<string,string[]>();
+  await Promise.all(teams.slice(0,100).map(async team=>{const teamMembers=await collect(prefix+'/teams/'+encodeURIComponent(safe(team.slug))+'/members?per_page=100','Team membership');for(const member of teamMembers)teamMemberships.set(safe(member.id),[...(teamMemberships.get(safe(member.id))||[]),safe(team.name)||safe(team.slug)]);}));
+  const identities:SyncedIdentity[]=members.map(u=>({id:id('github',safe(u.id)),rawId:safe(u.id),source:'github',displayName:safe(u.login),status:'active',kind:'user',roles:[],groups:teamMemberships.get(safe(u.id))||[],updatedAt:safe(u.updated_at)}));
   const resources:SyncedResource[]=[
     ...teams.map(t=>({id:id('github-team',safe(t.id)),source:'github',name:safe(t.name)||safe(t.slug),kind:'team' as const,description:safe(t.description),members:typeof t.members_count==='number'?t.members_count:undefined})),
     ...repos.map(r=>({id:id('github-repo',safe(r.id)),source:'github',name:safe(r.full_name)||safe(r.name),kind:'repository' as const,description:safe(r.description),risk:r.private?'medium' as const:'low' as const}))
