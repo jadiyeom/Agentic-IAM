@@ -1,3 +1,4 @@
+import express from 'express';
 import { createHash, createHmac, createSign } from 'node:crypto';
 import type { Request, Response } from 'express';
 
@@ -160,8 +161,9 @@ async function awsCall(action:string):Promise<any>{
   const body='Action='+encodeURIComponent(action)+'&Version=2010-05-08';
   const headers:Record<string,string>={'authorization':awsAuth(host,'/',body,region,amzDate,stamp),'content-type':'application/x-www-form-urlencoded; charset=utf-8','host':host,'x-amz-date':amzDate};
   if(process.env.AWS_SESSION_TOKEN)headers['x-amz-security-token']=process.env.AWS_SESSION_TOKEN;
-  const xml=await textResponse('https://'+host+'/',{...headers, 'x-action':action});
-  return xml;
+  const response=await fetch('https://'+host+'/',{method:'POST',headers,body,signal:timeout()});
+  if(!response.ok) throw new Error('Provider request failed ('+response.status+')');
+  return response.text();
 }
 function xmlItems(xml:string, tag:string):Array<Record<string,string>>{
   const out:Array<Record<string,string>>=[]; const blocks=xml.match(new RegExp('<'+tag+'>([\\s\\S]*?)</'+tag+'>','g'))||[];
@@ -231,7 +233,7 @@ export async function syncConnector(id:string):Promise<ConnectorSnapshot>{
 export function getConnectorSnapshot(id:string){return snapshots.get(id)||null;}
 export function listConnectorSnapshots(){return [...snapshots.values()].map(s=>({connectorId:s.connectorId,provider:s.provider,syncedAt:s.syncedAt,counts:s.counts,warnings:s.warnings}));}
 export function createSyncRouter(){
-  const router=(require('express') as typeof import('express')).Router();
+  const router=express.Router();
   router.get('/snapshots',(_req:Request,res:Response)=>res.json(listConnectorSnapshots()));
   router.get('/:id/data', (req:Request,res:Response)=>{
     const snapshot=getConnectorSnapshot(req.params.id);
