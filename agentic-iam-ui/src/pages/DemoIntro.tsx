@@ -14,9 +14,7 @@ export const DemoIntro: React.FC = () => {
   const navigate = useNavigate();
 
   const enterSyntheticDemo = () => {
-    localStorage.setItem('steerpast-iam-demo-mode', 'synthetic');
-    localStorage.setItem('steerpast-iam-auth', 'true');
-    navigate('/identities');
+    navigate('/login?mode=synthetic');
   };
 
   return (
@@ -37,11 +35,11 @@ export const DemoIntro: React.FC = () => {
           <Reveal className="h-full">
             <section className="flex h-full flex-col rounded-[22px] border border-[#b7ff49]/25 bg-[#b7ff49]/[0.045] p-6 shadow-[0_0_70px_rgba(183,255,73,.045)] sm:p-8">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#b7ff49]/20 bg-[#b7ff49]/[0.06] px-3 py-1.5 text-[10px] font-medium text-[#d5ff9d]"><FlaskConical className="h-3.5 w-3.5" />No setup required</span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#b7ff49]/20 bg-[#b7ff49]/[0.06] px-3 py-1.5 text-[10px] font-medium text-[#d5ff9d]"><FlaskConical className="h-3.5 w-3.5" />Account required</span>
                 <Database className="h-5 w-5 text-[#b7ff49]" />
               </div>
               <h2 className="mt-6 text-2xl font-medium tracking-[-0.035em]">Explore with synthetic data</h2>
-              <p className="mt-3 text-[13px] leading-6 text-white/60">Jump straight into a realistic identity-security scenario. No sign-in to an identity provider and no tenant access needed.</p>
+              <p className="mt-3 text-[13px] leading-6 text-white/60">Sign in to explore a realistic identity-security scenario. No connection to a customer identity provider or tenant access is needed.</p>
               <ul className="mt-5 space-y-3 text-[12px] leading-5 text-white/65">
                 <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#b7ff49]" />Pre-populated sample identities and audit events</li>
                 <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#b7ff49]" />Explore risk, policy, decisions, and remediation</li>
@@ -72,7 +70,7 @@ export const DemoIntro: React.FC = () => {
               <button type="button" disabled className="mt-4 inline-flex h-11 cursor-not-allowed items-center justify-center gap-2 rounded-full border border-white/10 px-5 text-[13px] font-medium text-white/35" aria-describedby="live-setup-status">
                 <LogIn className="h-4 w-4" />Live source setup · coming next
               </button>
-              <p id="live-setup-status" className="mt-2 text-[10px] text-white/35">Authentication and secure per-workspace credential storage will be implemented before live access is enabled.</p>
+              <p id="live-setup-status" className="mt-2 text-[10px] text-white/35">Account authentication is being added now. Live provider connections remain disabled until per-workspace authorization and secure credential storage are ready.</p>
             </section>
           </Reveal>
         </div>
