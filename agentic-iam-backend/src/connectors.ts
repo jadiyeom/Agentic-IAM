@@ -16,17 +16,17 @@ type ConnectorDefinition = {
 const CONNECTORS: ConnectorDefinition[] = [
   {
     id: 'entra', name: 'Microsoft Entra ID', category: 'identity-provider',
-    description: 'Directory users, groups, app principals, roles and audit context.',
+    description: 'Directory users, group membership, directory roles and service principals, plus recent audit events.',
     env: ['ENTRA_TENANT_ID', 'ENTRA_CLIENT_ID', 'ENTRA_CLIENT_SECRET'],
-    scopes: ['User.Read.All', 'Group.Read.All', 'Application.Read.All', 'Directory.Read.All'],
+    scopes: ['User.Read.All', 'Group.Read.All', 'Application.Read.All', 'Directory.Read.All', 'RoleManagement.Read.Directory', 'AuditLog.Read.All'],
     capabilities: ['users', 'groups', 'service-principals', 'applications'],
     setupUrl: 'https://learn.microsoft.com/en-us/graph/overview'
   },
   {
     id: 'google-workspace', name: 'Google Workspace', category: 'identity-provider',
-    description: 'Directory users and groups using a service account with domain-wide delegation.',
+    description: 'Directory users, group membership, organizational units, admin roles and recent audit events.',
     env: ['GOOGLE_WORKSPACE_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_WORKSPACE_PRIVATE_KEY', 'GOOGLE_WORKSPACE_ADMIN_EMAIL'],
-    scopes: ['https://www.googleapis.com/auth/admin.directory.user.readonly'],
+    scopes: ['admin.directory.user.readonly', 'admin.directory.group.readonly', 'admin.directory.orgunit.readonly', 'admin.directory.rolemanagement.readonly', 'admin.reports.audit.readonly'],
     capabilities: ['users', 'groups', 'organizational-units'],
     setupUrl: 'https://developers.google.com/workspace/admin/directory/v1/guides/authorizing'
   },
