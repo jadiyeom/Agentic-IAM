@@ -14,9 +14,7 @@ export const DemoIntro: React.FC = () => {
   const navigate = useNavigate();
 
   const enterSyntheticDemo = () => {
-    localStorage.setItem('steerpast-iam-demo-mode', 'synthetic');
-    localStorage.setItem('steerpast-iam-auth', 'true');
-    navigate('/identities');
+    navigate('/login?mode=synthetic');
   };
 
   return (
