@@ -124,7 +124,7 @@ async function google(): Promise<ConnectorSnapshot> {
     collect('https://admin.googleapis.com/admin/directory/v1/groups?customer=my_customer&maxResults=200','Groups','groups'),
     collect('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits?type=all','Organizational units','organizationUnits'),
     collect('https://admin.googleapis.com/admin/reports/v1/activity/users/all/applications/admin?maxResults=100','Admin audit events','items'),
-    collect('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles','Admin roles','items'),
+    collect('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles','Admin roles','roles'),
     collect('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments?maxResults=200','Role assignments','items')
   ]);
   const googleGroups = new Map<string,string[]>();
