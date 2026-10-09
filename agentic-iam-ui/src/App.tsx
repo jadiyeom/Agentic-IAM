@@ -16,13 +16,14 @@ const DemoIntro = named(() => import('./pages/DemoIntro'), 'DemoIntro');
 const Privacy = named(() => import('./pages/Privacy'), 'Privacy');
 const Terms = named(() => import('./pages/Terms'), 'Terms');
 const Entitlements = React.lazy(() => import('./pages/Entitlements'));
+const Connectors = named(() => import('./pages/Connectors'), 'default');
 
 const PageFallback: React.FC = () => (
   <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Loading">
     <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-[#b7ff49]" />
   </div>
 );
-import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Search } from 'lucide-react';
+import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Search, Plug } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { CommandPalette, openCommandPalette } from './components/CommandPalette';
 
@@ -38,6 +39,7 @@ const navItems = [
   { to: '/entitlements', label: 'Entitlements', short: 'Roles', icon: Boxes },
   { to: '/explain-audit', label: 'Audit & decisions', short: 'Audit', icon: FileSearch },
   { to: '/system-metrics', label: 'System', short: 'System', icon: Activity },
+  { to: '/connectors', label: 'Live connectors', short: 'Sources', icon: Plug },
 ];
 
 const DemoNav: React.FC = () => {
@@ -116,7 +118,7 @@ const MobileBar: React.FC = () => (
         </span>
       </div>
     </div>
-    <nav aria-label="Workspace" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/[0.08] bg-[#08090b]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+    <nav aria-label="Workspace" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/[0.08] bg-[#08090b]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
       {navItems.map(({ to, short, icon: Icon }) => (
         <NavLink key={to} to={to} className={({ isActive }) => `flex flex-col items-center gap-1 py-2.5 text-[10px] transition ${isActive ? 'text-[#b7ff49]' : 'text-white/55'}`}>
           <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -164,6 +166,7 @@ const DemoShell: React.FC = () => {
           <Route path="/entitlements" element={<Entitlements />} />
           <Route path="/explain-audit" element={<ExplainAudit />} />
           <Route path="/system-metrics" element={<SystemMetrics />} />
+          <Route path="/connectors" element={<Connectors />} />
           <Route path="/dashboard" element={<Navigate to="/identities" replace />} />
           <Route path="*" element={<Navigate to="/identities" replace />} />
         </Routes>
