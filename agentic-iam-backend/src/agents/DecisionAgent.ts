@@ -30,7 +30,7 @@ export interface DecisionResult {
   rationale: string;
   confidence: number; // 0-1
   usedLLM: boolean;
-  decisionProvider: 'claude' | 'huggingface' | 'heuristic';
+  decisionProvider: 'gemini' | 'openai' | 'claude' | 'huggingface' | 'heuristic';
   /** Model that produced the decision, when a model was used. */
   model?: string;
   /** Wall-clock time spent producing the decision. */
@@ -68,8 +68,12 @@ export class DecisionAgent {
   async decide(context: DecisionContext): Promise<DecisionResult> {
     const started = Date.now();
     let result: DecisionResult;
-    if (process.env.ANTHROPIC_API_KEY) {
+    if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+      result = await this.decideWithGemini(context);
+    } else if (process.env.ANTHROPIC_API_KEY) {
       result = await this.decideWithClaude(context);
+    } else if (process.env.OPENAI_API_KEY) {
+      result = await this.decideWithOpenAI(context);
     } else if (huggingfaceConfig.apiKey && huggingfaceConfig.endpoint && huggingfaceConfig.model) {
       result = await this.decideWithLLM(context);
     } else {
@@ -155,6 +159,154 @@ export class DecisionAgent {
     } catch (err) {
       const fallback = this.decideHeuristically(context);
       fallback.fallbackReason = err instanceof Error ? err.message.slice(0, 160) : 'Model call failed';
+      return fallback;
+    }
+  }
+
+  private async decideWithGemini(context: DecisionContext): Promise<DecisionResult> {
+    const { identity, risk, policy } = context;
+    const key = this.fingerprint(context);
+    const hit = this.cache.get(key);
+    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+      return { ...hit.result, cached: true, latencyMs: 0 };
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const started = Date.now();
+
+    try {
+      const userPayload = {
+        identity: {
+          id: identity.id,
+          name: identity.name,
+          attributes: identity.attributes,
+          roles: identity.roles,
+          entitlements: identity.entitlements,
+        },
+        risk: { score: risk.riskScore, tier: riskTier(risk.riskScore), factors: risk.factors },
+        policyViolations: policy.violations.map((v) => ({
+          type: v.policyType,
+          severity: v.severity,
+          description: v.description,
+        })),
+      };
+
+      const prompt = `${SYSTEM_PROMPT}\n\nEvaluate this identity access state strictly as JSON:\n${JSON.stringify(userPayload, null, 2)}`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey!)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0,
+              responseMimeType: 'application/json',
+            },
+          }),
+          signal: AbortSignal.timeout(12000),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+      }
+
+      const data: any = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const parsed = this.parseDecisionResponse(text);
+
+      const result: DecisionResult = {
+        identityId: identity.id,
+        outcome: parsed.outcome,
+        rationale: parsed.rationale,
+        confidence: parsed.confidence,
+        usedLLM: true,
+        decisionProvider: 'gemini',
+        model,
+        latencyMs: Date.now() - started,
+      };
+      this.remember(key, result);
+      return result;
+    } catch (err) {
+      const fallback = this.decideHeuristically(context);
+      fallback.fallbackReason = err instanceof Error ? err.message.slice(0, 160) : 'Gemini call failed';
+      return fallback;
+    }
+  }
+
+  private async decideWithOpenAI(context: DecisionContext): Promise<DecisionResult> {
+    const { identity, risk, policy } = context;
+    const key = this.fingerprint(context);
+    const hit = this.cache.get(key);
+    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+      return { ...hit.result, cached: true, latencyMs: 0 };
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY!;
+    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const started = Date.now();
+
+    try {
+      const userPayload = {
+        identity: {
+          id: identity.id,
+          name: identity.name,
+          attributes: identity.attributes,
+          roles: identity.roles,
+          entitlements: identity.entitlements,
+        },
+        risk: { score: risk.riskScore, tier: riskTier(risk.riskScore), factors: risk.factors },
+        policyViolations: policy.violations.map((v) => ({
+          type: v.policyType,
+          severity: v.severity,
+          description: v.description,
+        })),
+      };
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: JSON.stringify(userPayload) },
+          ],
+        }),
+        signal: AbortSignal.timeout(12000),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data: any = await response.json();
+      const text = data?.choices?.[0]?.message?.content || '';
+      const parsed = this.parseDecisionResponse(text);
+
+      const result: DecisionResult = {
+        identityId: identity.id,
+        outcome: parsed.outcome,
+        rationale: parsed.rationale,
+        confidence: parsed.confidence,
+        usedLLM: true,
+        decisionProvider: 'openai',
+        model,
+        latencyMs: Date.now() - started,
+      };
+      this.remember(key, result);
+      return result;
+    } catch (err) {
+      const fallback = this.decideHeuristically(context);
+      fallback.fallbackReason = err instanceof Error ? err.message.slice(0, 160) : 'OpenAI call failed';
       return fallback;
     }
   }

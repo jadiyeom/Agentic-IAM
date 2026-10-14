@@ -38,6 +38,58 @@ export function createRouter(orchestrator: IAMOrchestrator) {
     res.json(roles);
   });
 
+  // Policy Management Endpoints
+  router.get('/policies', (_req, res) => {
+    try {
+      res.json(orchestrator.getPolicies());
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to fetch policies' });
+    }
+  });
+
+  router.post('/policies', (req, res) => {
+    const { id, name, type, description, config, enabled } = req.body ?? {};
+    if (!name || !type) {
+      res.status(400).json({ error: 'Policy name and type are required' });
+      return;
+    }
+    const validTypes = ['LEAST_PRIVILEGE', 'SOD', 'ROLE_ELIGIBILITY', 'AI_AGENT_GOVERNANCE', 'TOXIC_COMBINATION'];
+    if (!validTypes.includes(type)) {
+      res.status(400).json({ error: `Policy type must be one of: ${validTypes.join(', ')}` });
+      return;
+    }
+    const policyId = id || `policy-${type.toLowerCase().replace(/_/g, '-')}-${Date.now()}`;
+    const newPolicy = {
+      id: policyId,
+      name: String(name).trim(),
+      type,
+      description: description ? String(description).trim() : '',
+      enabled: enabled !== false,
+      config: config || {},
+    };
+    orchestrator.addPolicy(newPolicy);
+    res.status(201).json(newPolicy);
+  });
+
+  router.patch('/policies/:id', (req, res) => {
+    const updated = orchestrator.updatePolicy(req.params.id, req.body ?? {});
+    if (!updated) {
+      res.status(404).json({ error: 'Policy not found' });
+      return;
+    }
+    res.json(orchestrator.getPolicy(req.params.id));
+  });
+
+  router.delete('/policies/:id', (req, res) => {
+    const removed = orchestrator.removePolicy(req.params.id);
+    if (!removed) {
+      res.status(404).json({ error: 'Policy not found' });
+      return;
+    }
+    res.status(204).send();
+  });
+
   // Add new identity
   router.post('/identities', async (req, res) => {
     const problem = validateNewIdentity(req.body);
@@ -197,6 +249,31 @@ export function createRouter(orchestrator: IAMOrchestrator) {
     }
   });
 
+  // Pre-flight "What-If" Access Request Sandbox
+  router.post('/simulate/access-request', async (req, res) => {
+    const { identityId, roleId, justification } = req.body as {
+      identityId: string;
+      roleId: string;
+      justification?: string;
+    };
+    if (!identityId || !roleId) {
+      res.status(400).json({ error: 'identityId and roleId are required' });
+      return;
+    }
+    try {
+      const result = await orchestrator.simulateAccessRequest(identityId, roleId, justification);
+      if (!result) {
+        res.status(404).json({ error: 'Identity or Role not found' });
+        return;
+      }
+      res.json(result);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      res.status(500).json({ error: 'Failed to simulate access request' });
+    }
+  });
+
   // Remediation controls.
   router.post('/identities/:id/actions', async (req, res) => {
     const { action, decisionOutcome, reason } = req.body as {
@@ -234,6 +311,28 @@ export function createRouter(orchestrator: IAMOrchestrator) {
     }
   });
 
+  // Quarantine an identity (emergency freeze)
+  router.post('/identities/:id/quarantine', (req, res) => {
+    const reason = req.body?.reason || 'Quarantined due to critical anomaly or unowned agent risk';
+    const result = orchestrator.quarantineIdentity(req.params.id, reason);
+    if (!result) {
+      res.status(404).json({ error: 'Identity not found' });
+      return;
+    }
+    res.json(result);
+  });
+
+  // Targeted single-role revocation
+  router.delete('/identities/:id/roles/:roleId', (req, res) => {
+    const reason = (req.query?.reason as string) || 'Manual operator revocation';
+    const result = orchestrator.revokeRole(req.params.id, req.params.roleId, reason);
+    if (!result) {
+      res.status(404).json({ error: 'Identity or assigned role not found' });
+      return;
+    }
+    res.json(result);
+  });
+
   // Liveness + configuration (never exposes secrets).
   router.get('/health', async (_req, res) => {
     res.json({ ok: true, ...(await orchestrator.getAgentHealth()) });
@@ -252,6 +351,27 @@ export function createRouter(orchestrator: IAMOrchestrator) {
 
   router.get('/audit', (_req, res) => {
     res.json(orchestrator.getAuditLog());
+  });
+
+  // Export audit logs (JSON or CSV)
+  router.get('/audit/export', async (req, res) => {
+    const format = req.query.format === 'csv' ? 'csv' : 'json';
+    try {
+      const data = await orchestrator.exportAuditLog(format);
+      if (format === 'csv') {
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="steerpast-iam-audit.csv"');
+        res.send(data);
+      } else {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', 'attachment; filename="steerpast-iam-audit.json"');
+        res.json(data);
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      res.status(500).json({ error: 'Failed to export audit log' });
+    }
   });
 
   router.get('/remediation-log', (_req, res) => {

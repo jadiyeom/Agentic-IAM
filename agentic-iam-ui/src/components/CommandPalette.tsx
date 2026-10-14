@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ArrowLeft, Bot, Boxes, CornerDownLeft, FileSearch, RotateCcw, Search, User, Users } from 'lucide-react';
+import { Activity, ArrowLeft, Bot, Boxes, CornerDownLeft, FileSearch, RotateCcw, Search, Shield, User, Users } from 'lucide-react';
 import { fetchIdentities, IdentityViewModel, resetDemo } from '../services/iamApi';
 import { riskTier, tierStyles } from './ui';
 
@@ -55,6 +55,7 @@ export const CommandPalette: React.FC = () => {
     const nav: Item[] = [
       { id: 'nav-identities', group: 'Navigate', label: 'Identities', icon: Users, run: go('/identities') },
       { id: 'nav-entitlements', group: 'Navigate', label: 'Entitlements', icon: Boxes, run: go('/entitlements') },
+      { id: 'nav-policies', group: 'Navigate', label: 'Security Policies', icon: Shield, run: go('/policies') },
       { id: 'nav-audit', group: 'Navigate', label: 'Audit & decisions', icon: FileSearch, run: go('/explain-audit') },
       { id: 'nav-system', group: 'Navigate', label: 'System', icon: Activity, run: go('/system-metrics') },
     ];

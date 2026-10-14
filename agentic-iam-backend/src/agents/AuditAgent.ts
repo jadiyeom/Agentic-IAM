@@ -27,10 +27,13 @@ export class AuditExplainabilityAgent {
     risk: RiskEvaluationResult,
     policy: PolicyEvaluationResult
   ): Promise<AuditRecord> {
+    const hasLLM =
+      Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ||
+      Boolean(process.env.ANTHROPIC_API_KEY) ||
+      Boolean(process.env.OPENAI_API_KEY) ||
+      Boolean(huggingfaceConfig.apiKey && huggingfaceConfig.endpoint && huggingfaceConfig.model);
 
-    // Use Hugging Face if apiKey and endpoint are set, else fallback
-    const useHF = huggingfaceConfig.apiKey && huggingfaceConfig.endpoint && huggingfaceConfig.model;
-    const explanation = useHF
+    const explanation = hasLLM
       ? await this.generateExplanationWithLLM(identity, decision, risk, policy)
       : this.generateExplanationLocally(identity, decision, risk, policy);
 
@@ -55,13 +58,12 @@ export class AuditExplainabilityAgent {
     risk: RiskEvaluationResult,
     policy: PolicyEvaluationResult
   ): Promise<string> {
-    // Hugging Face text-generation API expects a prompt string
     const systemPrompt =
-      'You are an IAM audit and explainability engine. Given identity details, risk scores, ' +
+      'You are an IAM audit and explainability engine inside Steerpast IAM. Given identity details, risk scores, ' +
       'policy violations, and a final decision, generate a clear, concise explanation suitable ' +
-      'for auditors and security architects. It must explicitly explain why risky combinations ' +
-      'like interns holding production database admin roles are dangerous (e.g., blast radius, ' +
-      'data exfiltration, SoD, regulatory exposure). Use 1-3 short paragraphs.';
+      'for auditors and security architects. Explain why risky combinations ' +
+      'or autonomous AI agent privileges are dangerous (blast radius, data exfiltration, SoD, regulatory exposure). ' +
+      'Use 1-2 concise paragraphs.';
 
     const userContent = {
       identity,
@@ -70,49 +72,106 @@ export class AuditExplainabilityAgent {
       decision,
     };
 
-    const prompt = `${systemPrompt}\n\n${JSON.stringify(userContent, null, 2)}`;
+    const promptText = `${systemPrompt}\n\n${JSON.stringify(userContent, null, 2)}`;
 
     try {
-      // Optional: timeout handling for responsiveness
-      const controller = new AbortController();
-      setTimeout(() => controller.abort(), 15000);
+      // 1. Google Gemini
+      const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+      if (geminiKey) {
+        const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: { temperature: 0.2, maxOutputTokens: 350 },
+            }),
+            signal: AbortSignal.timeout(10000),
+          }
+        );
+        if (res.ok) {
+          const data: any = await res.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text?.trim()) return text.trim();
+        }
+      }
 
-      const response = await fetch(
-        `${huggingfaceConfig.endpoint}${huggingfaceConfig.model}`,
-        {
+      // 2. Anthropic Claude
+      if (process.env.ANTHROPIC_API_KEY) {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+            max_tokens: 350,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: JSON.stringify(userContent) }],
+          }),
+          signal: AbortSignal.timeout(10000),
+        });
+        if (res.ok) {
+          const data: any = await res.json();
+          const text = data.content?.find((b: any) => b.type === 'text')?.text;
+          if (text?.trim()) return text.trim();
+        }
+      }
+
+      // 3. OpenAI
+      if (process.env.OPENAI_API_KEY) {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: JSON.stringify(userContent) },
+            ],
+            max_tokens: 350,
+          }),
+          signal: AbortSignal.timeout(10000),
+        });
+        if (res.ok) {
+          const data: any = await res.json();
+          const text = data?.choices?.[0]?.message?.content;
+          if (text?.trim()) return text.trim();
+        }
+      }
+
+      // 4. Hugging Face fallback if configured
+      if (huggingfaceConfig.apiKey && huggingfaceConfig.endpoint && huggingfaceConfig.model) {
+        const res = await fetch(`${huggingfaceConfig.endpoint}${huggingfaceConfig.model}`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${huggingfaceConfig.apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            inputs: prompt,
-            parameters: {
-              max_new_tokens: 300,
-              return_full_text: false,
-            },
-            options: { wait_for_model: true },
+            inputs: promptText,
+            parameters: { max_new_tokens: 250, return_full_text: false },
           }),
-          signal: controller.signal,
+          signal: AbortSignal.timeout(10000),
+        });
+        if (res.ok) {
+          const data: any = await res.json();
+          const text = Array.isArray(data) ? data[0]?.generated_text : data?.generated_text;
+          if (text?.trim()) return text.trim();
         }
-      );
-      if (!response.ok) throw new Error('Hugging Face API error');
-      const data: any = await response.json();
-      // HF text-generation returns [{ generated_text: ... }] or { generated_text: ... }
-      let text = '';
-      if (Array.isArray(data) && data[0]?.generated_text) {
-        text = data[0].generated_text;
-      } else if (data.generated_text) {
-        text = data.generated_text;
-      } else if (data[0]?.generated_text) {
-        text = data[0].generated_text;
-      } else {
-        text = JSON.stringify(data);
       }
-      return text.trim();
     } catch {
-      return this.generateExplanationLocally(identity, decision, risk, policy);
+      // Fall through to deterministic local generator
     }
+
+    return this.generateExplanationLocally(identity, decision, risk, policy);
   }
 
   private generateExplanationLocally(

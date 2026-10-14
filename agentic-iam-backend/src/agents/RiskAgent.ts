@@ -7,6 +7,7 @@ export interface RiskFactors {
   seniorityAlignmentScore: number;
   peerAnomalyScore: number;
   historicalChangeScore: number;
+  agentGovernanceScore?: number;
 }
 
 export interface RiskEvaluationResult {
@@ -65,6 +66,17 @@ export class RiskEvaluationAgent {
     const misalignment = Math.max(0, expectedIndexForSensitivity - seniorityIndex);
     const seniorityAlignmentScore = Math.min(100, misalignment * 25); // each level of mismatch adds 25 (0–100)
 
+    // AI agent governance score: lack of owner or critical blast radius without oversight
+    const isAgent = identity.attributes.identityType === 'AI_AGENT' || identity.attributes.identityType === 'SERVICE';
+    let agentGovernanceScore = 0;
+    if (isAgent) {
+      const hasOwner = Boolean(identity.attributes.owner && identity.attributes.owner.trim());
+      if (!hasOwner) agentGovernanceScore += 60;
+      const hasCriticalRole = roles.some((r) => r.sensitivity === 'CRITICAL');
+      if (hasCriticalRole) agentGovernanceScore += 40;
+      agentGovernanceScore = Math.min(100, agentGovernanceScore);
+    }
+
     // Peer anomaly: compare role set to peers sharing department and similar seniority.
     const peers = Array.from(state.identities.values()).filter((peer) => {
       if (peer.id === identity.id) return false;
@@ -98,18 +110,26 @@ export class RiskEvaluationAgent {
       historicalChangeScore = Math.min(changeCount * 15, 100);
     }
 
-    // Every factor is on a 0–100 scale, so the weighted sum is too.
-    const totalRisk = Math.min(
-      roleSensitivityScore * 0.4 +
-        seniorityAlignmentScore * 0.3 +
-        peerAnomalyScore * 0.2 +
-        historicalChangeScore * 0.1,
-      100
-    );
+    // For autonomous agents, replace seniority alignment with agent governance weight
+    const totalRisk = isAgent
+      ? Math.min(
+          roleSensitivityScore * 0.4 +
+            agentGovernanceScore * 0.35 +
+            peerAnomalyScore * 0.15 +
+            historicalChangeScore * 0.1,
+          100
+        )
+      : Math.min(
+          roleSensitivityScore * 0.4 +
+            seniorityAlignmentScore * 0.3 +
+            peerAnomalyScore * 0.2 +
+            historicalChangeScore * 0.1,
+          100
+        );
 
     const contextSummary = [
       `roleSensitivity=${roleSensitivityScore.toFixed(1)}`,
-      `seniorityAlignment=${seniorityAlignmentScore.toFixed(1)}`,
+      isAgent ? `agentGovernance=${agentGovernanceScore.toFixed(1)}` : `seniorityAlignment=${seniorityAlignmentScore.toFixed(1)}`,
       `peerAnomaly=${peerAnomalyScore.toFixed(1)}`,
       `historicalChange=${historicalChangeScore.toFixed(1)}`,
     ].join(', ');
@@ -122,6 +142,7 @@ export class RiskEvaluationAgent {
         seniorityAlignmentScore,
         peerAnomalyScore,
         historicalChangeScore,
+        ...(isAgent ? { agentGovernanceScore } : {}),
       },
       contextSummary,
     };

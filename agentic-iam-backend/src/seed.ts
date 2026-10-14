@@ -312,6 +312,23 @@ export function seedIdentities(): Identity[] {
       entitlements: [],
       history: [],
     },
+    // 5. Unowned legacy AI agent with critical cloud root privileges
+    {
+      id: 'id-crawler-agent',
+      name: 'crawler-agent',
+      attributes: {
+        department: 'Engineering',
+        title: 'Legacy Scraping Agent',
+        seniority: 'MID',
+        employmentType: 'AUTOMATION',
+        location: 'us-west-2',
+        identityType: 'AI_AGENT',
+        owner: '',
+      },
+      roles: ['role-cloud-root-admin'],
+      entitlements: [],
+      history: [],
+    },
   ];
 }
 
@@ -323,6 +340,7 @@ export function seedPolicies(): Policy[] {
       type: 'LEAST_PRIVILEGE',
       description:
         'Flags identities with much broader domain coverage than peers with similar department and seniority.',
+      enabled: true,
       config: {},
     },
     {
@@ -330,6 +348,7 @@ export function seedPolicies(): Policy[] {
       name: 'Finance SoD: Analyst vs Approver',
       type: 'SOD',
       description: 'Prevents a single identity from both initiating and approving financial transactions.',
+      enabled: true,
       config: {
         conflictingRoles: [['role-finance-analyst', 'role-finance-approver']],
       },
@@ -340,6 +359,7 @@ export function seedPolicies(): Policy[] {
       type: 'ROLE_ELIGIBILITY',
       description:
         'Controls eligibility for highly sensitive roles based on seniority, employment type, and department.',
+      enabled: true,
       config: {
         rules: [
           {
@@ -359,6 +379,31 @@ export function seedPolicies(): Policy[] {
             allowedEmploymentTypes: ['FULL_TIME', 'AUTOMATION'],
             allowedDepartments: ['Platform', 'Engineering'],
           },
+        ],
+      },
+    },
+    {
+      id: 'policy-ai-agent-governance',
+      name: 'AI Agent Governance & Blast Radius',
+      type: 'AI_AGENT_GOVERNANCE',
+      description: 'Requires all AI agents and service principals to have an active human owner and restricts unapproved critical roles.',
+      enabled: true,
+      config: {
+        requireOwner: true,
+        restrictCriticalRoles: true,
+        allowedRolesForAgents: ['role-devops-engineer', 'role-customer-support-lead'],
+      },
+    },
+    {
+      id: 'policy-toxic-combinations',
+      name: 'Toxic Combinations & Cross-Domain Exposure',
+      type: 'TOXIC_COMBINATION',
+      description: 'Detects toxic role combinations bridging production databases or customer data with external developer/support conduits.',
+      enabled: true,
+      config: {
+        toxicDomains: [
+          ['PRODUCTION_DB', 'SUPPORT_PORTAL'],
+          ['CUSTOMER_DATA', 'DEV_CODE_REPO'],
         ],
       },
     },

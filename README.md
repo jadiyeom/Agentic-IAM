@@ -18,40 +18,44 @@ The public demo uses seeded/sample identities and does not require a production 
 The backend is a TypeScript / Node.js / Express service organized around specialized agents:
 
 - **IdentityAgent** — identity and entitlement context
-- **RiskAgent** — contextual 0–100 risk evaluation
-- **PolicyAgent** — least privilege, role eligibility, and policy constraints
-- **DecisionAgent** — decision synthesis with optional Claude integration
-- **RemediationAgent** — controlled corrective actions
-- **AuditAgent** — evidence and decision history
-- **IAMOrchestrator** — coordinates the end-to-end workflow
+- **RiskAgent** — contextual 0–100 risk evaluation with autonomous AI agent blast radius scoring
+- **PolicyAgent** — least privilege, segregation of duties (SoD), role eligibility, toxic combinations, and AI agent governance
+- **DecisionAgent** — decision synthesis with multi-provider LLM integration (Google Gemini, Anthropic Claude, OpenAI, or deterministic heuristics)
+- **RemediationAgent** — controlled corrective actions, targeted revocation, and emergency identity quarantine
+- **AuditAgent** — evidence and decision history with LLM-assisted explainability
+- **IAMOrchestrator** — coordinates the end-to-end workflow, pre-flight "What-If" simulations, and declarative policy management
 
-The frontend is React + TypeScript with a security workspace for identities, entitlements, explainability/audit, and system metrics.
+The frontend is React + TypeScript with a security workspace for identities, entitlements, security policies, explainability/audit, pre-flight access request simulation, and system metrics.
 
-## Claude integration
+## Multi-LLM integration
 
-When `ANTHROPIC_API_KEY` is configured on the backend, `DecisionAgent` calls the Claude Messages API using the model alias configured by `ANTHROPIC_MODEL` (default: `claude-sonnet-4-5`).
+Steerpast IAM supports multiple first-class LLM providers with automatic fallback to deterministic heuristics:
+
+- **Google Gemini** — set `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and optionally `GEMINI_MODEL` (default: `gemini-2.5-flash`).
+- **Anthropic Claude** — set `ANTHROPIC_API_KEY` and optionally `ANTHROPIC_MODEL` (default: `claude-sonnet-4-5`).
+- **OpenAI** — set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` (default: `gpt-4o-mini`).
+- **Deterministic Heuristics** — runs automatically when no API keys are present (default in offline test environments).
 
 The model receives structured identity/risk/policy context and is asked for:
 
-- one supported decision outcome
+- one supported decision outcome (`APPROVE`, `FLAG_FOR_REVIEW`, `RECOMMEND_REVOCATION`, or `AUTO_REMEDIATE`)
 - a concise rationale
-- a confidence score
+- a confidence score (0–1)
 
-The response is validated before becoming a decision:
+The response is strictly validated and cached keyed on immutable facts (attributes, roles, risk score, violations) so unchanged identities are never re-billed. Every decision records `decisionProvider`, `model`, and `latencyMs`.
 
-- outcome must be one of `APPROVE`, `FLAG_FOR_REVIEW`, `RECOMMEND_REVOCATION`, or `AUTO_REMEDIATE`
-- rationale must be non-empty
-- confidence must be numeric and bounded to 0–1
+## Pre-flight "What-If" Access Request Sandbox
 
-If the Claude call fails or returns malformed output, the system falls back to deterministic heuristics rather than emitting an unvalidated model decision, and records the `fallbackReason`.
+Rather than waiting for anomalous privileges to be granted, operators and automated workflows can simulate access requests **pre-flight**:
 
-Operationally, the Claude path runs at temperature 0 with a 12 s timeout and one retry, and caches decisions keyed on the exact facts (attributes, roles, risk score, violations) so an unchanged identity is not re-billed. Every decision carries `decisionProvider`, `model` and `latencyMs`.
-
-The public UI exposes the resulting `decisionProvider` so an operator can distinguish Claude-backed decisions from other providers.
+- `POST /api/simulate/access-request`
+- Input: `{ identityId, roleId, justification }`
+- Output: Baseline vs Projected Risk ($\Delta$ risk score), triggered policy violations, and AI agent recommendation (`SAFE_TO_GRANT`, `NEEDS_MANAGER_APPROVAL`, or `REJECT_POLICY_CONFLICT`).
+- UI includes an interactive simulator modal reachable directly from the Identities workspace or with <kbd>⌘K</kbd>.
 
 ## Demo scenarios
 
-The seeded workspace (14 identities, including two AI agents) contains four stories the agents resolve differently:
+The seeded workspace (15 identities, including three AI agents) contains five key security scenarios:
 
 | Identity | Situation | Decision |
 | --- | --- | --- |
@@ -59,8 +63,13 @@ The seeded workspace (14 identities, including two AI agents) contains four stor
 | Nikhil, finance contractor | Holds both Finance Analyst and Finance Approver | Recommend revocation (segregation of duties) |
 | `release-agent` (AI agent) | DevOps role with production and cloud access | Flag for owner review |
 | `support-agent` (AI agent) | Scoped support role | Approve |
+| `crawler-agent` (AI agent) | Unowned autonomous agent holding Cloud Root Admin | Auto-remediate / Recommend revocation (unowned agent breach) |
 
-In the workspace, **Run the intern scenario** grants production DB admin to an intern live and shows the risk, policy and decision change in one round trip. Press <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd> to jump to any identity or page, or to reset the demo data.
+In the workspace:
+- **Simulate access request**: Run pre-flight What-If simulations for any identity and role.
+- **Run the intern scenario**: Grants production DB admin to an intern live to observe end-to-end agent reactivity.
+- **Security Policies**: Dynamically inspect, enable, disable, and author policies.
+- Press <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd> to jump anywhere or reset demo data.
 
 The canonical workflow demonstrates:
 

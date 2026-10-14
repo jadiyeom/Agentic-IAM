@@ -1,4 +1,4 @@
-export type PolicyType = 'LEAST_PRIVILEGE' | 'SOD' | 'ROLE_ELIGIBILITY';
+export type PolicyType = 'LEAST_PRIVILEGE' | 'SOD' | 'ROLE_ELIGIBILITY' | 'AI_AGENT_GOVERNANCE' | 'TOXIC_COMBINATION';
 
 export interface PolicyViolation {
   id: string;
@@ -14,6 +14,7 @@ export interface Policy {
   name: string;
   type: PolicyType;
   description: string;
+  enabled?: boolean;
   // Arbitrary configuration, e.g. SoD conflicting roles, eligibility rules, etc.
   config: Record<string, unknown>;
 }

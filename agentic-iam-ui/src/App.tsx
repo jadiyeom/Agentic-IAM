@@ -17,13 +17,14 @@ const Privacy = named(() => import('./pages/Privacy'), 'Privacy');
 const Terms = named(() => import('./pages/Terms'), 'Terms');
 const Entitlements = React.lazy(() => import('./pages/Entitlements'));
 const Connectors = named(() => import('./pages/Connectors'), 'default');
+const Policies = named(() => import('./pages/Policies'), 'Policies');
 
 const PageFallback: React.FC = () => (
   <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Loading">
     <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-[#b7ff49]" />
   </div>
 );
-import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Search, Plug } from 'lucide-react';
+import { ArrowLeft, Boxes, FileSearch, Users, Activity, LogOut, Search, Plug, Shield } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { CommandPalette, openCommandPalette } from './components/CommandPalette';
 
@@ -37,6 +38,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 const navItems = [
   { to: '/identities', label: 'Identities', short: 'Identities', icon: Users },
   { to: '/entitlements', label: 'Entitlements', short: 'Roles', icon: Boxes },
+  { to: '/policies', label: 'Policies', short: 'Policies', icon: Shield },
   { to: '/explain-audit', label: 'Audit & decisions', short: 'Audit', icon: FileSearch },
   { to: '/system-metrics', label: 'System', short: 'System', icon: Activity },
   { to: '/connectors', label: 'Live connectors', short: 'Sources', icon: Plug },
@@ -164,6 +166,7 @@ const DemoShell: React.FC = () => {
         <Routes location={location}>
           <Route path="/identities" element={<Identities />} />
           <Route path="/entitlements" element={<Entitlements />} />
+          <Route path="/policies" element={<Policies />} />
           <Route path="/explain-audit" element={<ExplainAudit />} />
           <Route path="/system-metrics" element={<SystemMetrics />} />
           <Route path="/connectors" element={<Connectors />} />

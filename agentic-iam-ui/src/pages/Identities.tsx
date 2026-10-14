@@ -6,7 +6,8 @@ import { RiskLegend } from '../components/RiskLegend';
 import { PageHeader, StatCard, riskTier } from '../components/ui';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, Loader2, MousePointerClick, Play, Plus, Scale, Search, ShieldAlert, Users, X } from 'lucide-react';
+import { CheckCircle2, Loader2, MousePointerClick, Play, Plus, Scale, Search, ShieldAlert, Sparkles, Users, X } from 'lucide-react';
+import { AccessSimulatorModal } from '../components/AccessSimulatorModal';
 
 const useFocusParam = () => {
   const [params, setParams] = useSearchParams();
@@ -39,6 +40,7 @@ export const Identities: React.FC = () => {
   const [department, setDepartment] = useState('');
   const [riskLevel, setRiskLevel] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [toast, setToast] = useState<{ title: string; text: string } | null>(null);
 
@@ -174,6 +176,9 @@ export const Identities: React.FC = () => {
           icon={<Users className="h-5 w-5" />}
           actions={
             <div className="flex flex-wrap gap-2">
+              <button onClick={() => setShowSimulator(true)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#b7ff49]/30 bg-[#b7ff49]/10 px-4 text-[13px] font-medium text-[#b7ff49] transition hover:border-[#b7ff49]/50 hover:bg-[#b7ff49]/20">
+                <Sparkles className="h-3.5 w-3.5" /> Simulate access request
+              </button>
               <button onClick={runScenario} disabled={simulating || loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 text-[13px] font-medium text-white/85 transition hover:border-white/25 hover:bg-white/[0.07] disabled:opacity-50">
                 {simulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-current" />} Run the intern scenario
               </button>
@@ -290,6 +295,24 @@ export const Identities: React.FC = () => {
             </div>
           </form>
         </div>
+      )}
+
+      {showSimulator && (
+        <AccessSimulatorModal
+          identities={identities.map((i) => ({
+            id: i.identity.id,
+            name: i.identity.name,
+            title: i.identity.attributes.title,
+            risk: i.risk.riskScore,
+            roles: i.identity.roles,
+          }))}
+          roles={roles}
+          initialIdentityId={selectedId}
+          onClose={() => setShowSimulator(false)}
+          onRoleGranted={async () => {
+            await refresh();
+          }}
+        />
       )}
     </div>
   );

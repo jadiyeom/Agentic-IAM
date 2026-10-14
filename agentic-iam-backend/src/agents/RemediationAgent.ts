@@ -4,7 +4,7 @@ import { DecisionOutcome } from './DecisionAgent';
 export interface RemediationAction {
   id: string;
   identityId: string;
-  type: 'REVOKE_ACCESS' | 'DOWNGRADE_ROLES' | 'CREATE_REVIEW_TASK' | 'IGNORED';
+  type: 'REVOKE_ACCESS' | 'DOWNGRADE_ROLES' | 'CREATE_REVIEW_TASK' | 'QUARANTINE_IDENTITY' | 'IGNORED';
   decisionOutcome: DecisionOutcome;
   timestamp: number;
   details: Record<string, unknown>;
@@ -99,6 +99,53 @@ export class RemediationAgent {
       decisionOutcome: outcome,
       timestamp: Date.now(),
       details: { reason },
+    };
+    this.push(action);
+    return action;
+  }
+
+  quarantineIdentity(identityId: string, reason: string): RemediationAction | null {
+    const snapshot = this.identityAgent.getSnapshot();
+    const identity = snapshot.identities.get(identityId);
+    if (!identity) return null;
+
+    const quarantinedRoles = [...identity.roles];
+    for (const roleId of quarantinedRoles) {
+      this.identityAgent.revokeRole(identityId, roleId);
+    }
+
+    const action: RemediationAction = {
+      id: `quarantine-${Date.now()}-${identityId}`,
+      identityId,
+      type: 'QUARANTINE_IDENTITY',
+      decisionOutcome: 'AUTO_REMEDIATE',
+      timestamp: Date.now(),
+      details: {
+        reason,
+        quarantinedRoles,
+      },
+    };
+    this.push(action);
+    return action;
+  }
+
+  revokeRole(identityId: string, roleId: string, reason?: string): RemediationAction | null {
+    const snapshot = this.identityAgent.getSnapshot();
+    const identity = snapshot.identities.get(identityId);
+    if (!identity || !identity.roles.includes(roleId)) return null;
+
+    this.identityAgent.revokeRole(identityId, roleId);
+
+    const action: RemediationAction = {
+      id: `revoke-${Date.now()}-${identityId}-${roleId}`,
+      identityId,
+      type: 'REVOKE_ACCESS',
+      decisionOutcome: 'RECOMMEND_REVOCATION',
+      timestamp: Date.now(),
+      details: {
+        revokedRoles: [roleId],
+        reason: reason || 'Operator targeted role revocation',
+      },
     };
     this.push(action);
     return action;

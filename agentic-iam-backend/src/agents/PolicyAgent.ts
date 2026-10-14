@@ -15,10 +15,42 @@ export class PolicyComplianceAgent {
     return this.policies.length;
   }
 
+  getPolicies(): Policy[] {
+    return [...this.policies];
+  }
+
+  getPolicy(id: string): Policy | undefined {
+    return this.policies.find((p) => p.id === id);
+  }
+
+  addPolicy(policy: Policy): void {
+    const idx = this.policies.findIndex((p) => p.id === policy.id);
+    if (idx >= 0) {
+      this.policies[idx] = policy;
+    } else {
+      this.policies.push(policy);
+    }
+  }
+
+  updatePolicy(id: string, updates: Partial<Policy>): boolean {
+    const policy = this.policies.find((p) => p.id === id);
+    if (!policy) return false;
+    Object.assign(policy, updates);
+    return true;
+  }
+
+  removePolicy(id: string): boolean {
+    const initialLen = this.policies.length;
+    this.policies = this.policies.filter((p) => p.id !== id);
+    return this.policies.length < initialLen;
+  }
+
   evaluate(identity: Identity, state: IdentityMonitoringState): PolicyEvaluationResult {
     const violations: PolicyViolation[] = [];
 
     for (const policy of this.policies) {
+      if (policy.enabled === false) continue;
+
       switch (policy.type) {
         case 'LEAST_PRIVILEGE':
           violations.push(...this.evaluateLeastPrivilege(identity, state, policy));
@@ -28,6 +60,12 @@ export class PolicyComplianceAgent {
           break;
         case 'ROLE_ELIGIBILITY':
           violations.push(...this.evaluateRoleEligibility(identity, state, policy));
+          break;
+        case 'AI_AGENT_GOVERNANCE':
+          violations.push(...this.evaluateAIAgentGovernance(identity, state, policy));
+          break;
+        case 'TOXIC_COMBINATION':
+          violations.push(...this.evaluateToxicCombination(identity, state, policy));
           break;
       }
     }
@@ -178,6 +216,93 @@ export class PolicyComplianceAgent {
         });
       }
     }
+    return violations;
+  }
+
+  private evaluateAIAgentGovernance(
+    identity: Identity,
+    state: IdentityMonitoringState,
+    policy: Policy
+  ): PolicyViolation[] {
+    const isAgent = identity.attributes.identityType === 'AI_AGENT' || identity.attributes.identityType === 'SERVICE';
+    if (!isAgent) return [];
+
+    const violations: PolicyViolation[] = [];
+    const requireOwner = policy.config.requireOwner !== false;
+    const restrictCriticalRoles = policy.config.restrictCriticalRoles !== false;
+
+    // Rule 1: Autonomous identity must have an accountable human owner
+    if (requireOwner && (!identity.attributes.owner || !identity.attributes.owner.trim())) {
+      violations.push({
+        id: `${policy.id}-unowned-${identity.id}`,
+        policyId: policy.id,
+        policyType: 'AI_AGENT_GOVERNANCE',
+        description: `Autonomous ${identity.attributes.identityType === 'AI_AGENT' ? 'AI agent' : 'service'} ${identity.name} has no designated human owner, violating autonomous workload governance.`,
+        severity: 'CRITICAL',
+        details: {
+          identityType: identity.attributes.identityType,
+          missingField: 'owner',
+        },
+      });
+    }
+
+    // Rule 2: Unapproved critical blast radius roles for agents
+    if (restrictCriticalRoles) {
+      const allowedRoles = (policy.config.allowedRolesForAgents as string[]) || [];
+      for (const roleId of identity.roles) {
+        const role = state.roles.get(roleId);
+        if (role && role.sensitivity === 'CRITICAL' && !allowedRoles.includes(roleId)) {
+          violations.push({
+            id: `${policy.id}-agent-crit-${identity.id}-${roleId}`,
+            policyId: policy.id,
+            policyType: 'AI_AGENT_GOVERNANCE',
+            description: `AI agent ${identity.name} holds high-blast-radius role "${role.name}" without recorded dual-custody authorization.`,
+            severity: 'CRITICAL',
+            details: {
+              roleId,
+              roleName: role.name,
+              sensitivity: role.sensitivity,
+            },
+          });
+        }
+      }
+    }
+
+    return violations;
+  }
+
+  private evaluateToxicCombination(
+    identity: Identity,
+    state: IdentityMonitoringState,
+    policy: Policy
+  ): PolicyViolation[] {
+    const toxicPairs = (policy.config.toxicDomains as string[][]) || [
+      ['PRODUCTION_DB', 'DEV_CODE_REPO'],
+      ['CUSTOMER_DATA', 'DEV_CODE_REPO'],
+    ];
+
+    const heldDomains = new Set<string>();
+    for (const roleId of identity.roles) {
+      const role = state.roles.get(roleId);
+      if (role) {
+        role.domains.forEach((d) => heldDomains.add(d));
+      }
+    }
+
+    const violations: PolicyViolation[] = [];
+    for (const [domA, domB] of toxicPairs) {
+      if (heldDomains.has(domA) && heldDomains.has(domB)) {
+        violations.push({
+          id: `${policy.id}-toxic-${identity.id}-${domA}-${domB}`,
+          policyId: policy.id,
+          policyType: 'TOXIC_COMBINATION',
+          description: `${identity.name} holds toxic combination bridging ${domA} and ${domB}, exposing sensitive environments to unauthorized data flow.`,
+          severity: 'HIGH',
+          details: { domains: [domA, domB] },
+        });
+      }
+    }
+
     return violations;
   }
 }

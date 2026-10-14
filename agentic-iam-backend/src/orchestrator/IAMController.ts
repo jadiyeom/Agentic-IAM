@@ -7,6 +7,7 @@ import { AuditExplainabilityAgent, AuditRecord } from '../agents/AuditAgent';
 import { Identity } from '../models/Identity';
 import { Role } from '../models/Role';
 import { Entitlement } from '../models/Entitlement';
+import { Policy } from '../models/Policy';
 import { v4 as uuidv4 } from 'uuid';
 import { RISK_TIERS, riskTier } from '../riskTiers';
 
@@ -244,9 +245,121 @@ class IAMOrchestrator {
     ];
   }
 
-  // Audit export
-  async exportAuditLog() {
-    return this.auditAgent.getRecords();
+  // Audit export (JSON or CSV)
+  async exportAuditLog(format: 'json' | 'csv' = 'json'): Promise<any> {
+    const records = this.auditAgent.getRecords();
+    if (format === 'csv') {
+      const header = 'id,timestamp,isoTime,identityId,outcome,confidence,riskScore,violationsCount,rationale\n';
+      const rows = records.map((r) => {
+        const iso = new Date(r.timestamp).toISOString();
+        const esc = (s: string) => `"${(s || '').replace(/"/g, '""')}"`;
+        return [
+          r.id,
+          r.timestamp,
+          iso,
+          r.identityId,
+          r.decision.outcome,
+          r.decision.confidence,
+          r.risk.riskScore,
+          r.policy.violations.length,
+          esc(r.decision.rationale),
+        ].join(',');
+      });
+      return header + rows.join('\n');
+    }
+    return records;
+  }
+
+  // Pre-flight "What-If" Access Request Sandbox
+  async simulateAccessRequest(identityId: string, roleId: string, justification?: string) {
+    const state = this.identityAgent.getSnapshot();
+    const identity = state.identities.get(identityId);
+    const role = state.roles.get(roleId);
+    if (!identity || !role) return null;
+
+    const currentRisk = this.riskAgent.evaluateIdentity(identity, state);
+    const currentPolicy = this.policyAgent.evaluate(identity, state);
+
+    const simulatedRoles = identity.roles.includes(roleId) ? identity.roles : [...identity.roles, roleId];
+    const simulatedIdentity: Identity = {
+      ...identity,
+      roles: simulatedRoles,
+    };
+
+    const simulatedState = {
+      ...state,
+      identities: new Map(state.identities).set(identityId, simulatedIdentity),
+    };
+
+    const projectedRisk = this.riskAgent.evaluateIdentity(simulatedIdentity, simulatedState);
+    const projectedPolicy = this.policyAgent.evaluate(simulatedIdentity, simulatedState);
+    const predictedDecision = await this.decisionAgent.decide({
+      identity: simulatedIdentity,
+      risk: projectedRisk,
+      policy: projectedPolicy,
+    });
+
+    const newViolations = projectedPolicy.violations.filter(
+      (pv) => !currentPolicy.violations.some((cv) => cv.id === pv.id)
+    );
+
+    return {
+      identityId,
+      identityName: identity.name,
+      requestedRole: {
+        id: role.id,
+        name: role.name,
+        sensitivity: role.sensitivity,
+        domains: role.domains,
+      },
+      justification: justification || 'Unspecified access justification',
+      baseline: {
+        riskScore: currentRisk.riskScore,
+        violationsCount: currentPolicy.violations.length,
+      },
+      projected: {
+        riskScore: projectedRisk.riskScore,
+        riskDelta: projectedRisk.riskScore - currentRisk.riskScore,
+        violations: projectedPolicy.violations,
+        newViolations,
+      },
+      decision: predictedDecision,
+      recommendation:
+        predictedDecision.outcome === 'APPROVE'
+          ? 'SAFE_TO_GRANT'
+          : predictedDecision.outcome === 'FLAG_FOR_REVIEW'
+          ? 'NEEDS_MANAGER_APPROVAL'
+          : 'REJECT_POLICY_CONFLICT',
+    };
+  }
+
+  // Policy management
+  getPolicies(): Policy[] {
+    return this.policyAgent.getPolicies();
+  }
+
+  getPolicy(id: string): Policy | undefined {
+    return this.policyAgent.getPolicy(id);
+  }
+
+  addPolicy(policy: Policy): void {
+    this.policyAgent.addPolicy(policy);
+  }
+
+  updatePolicy(id: string, updates: Partial<Policy>): boolean {
+    return this.policyAgent.updatePolicy(id, updates);
+  }
+
+  removePolicy(id: string): boolean {
+    return this.policyAgent.removePolicy(id);
+  }
+
+  quarantineIdentity(identityId: string, reason: string): RemediationAction | null {
+    return this.remediationAgent.quarantineIdentity(identityId, reason);
+  }
+
+  revokeRole(identityId: string, roleId: string, reason?: string): RemediationAction | null {
+    return this.remediationAgent.revokeRole(identityId, roleId, reason);
   }
 
   // Risk distribution, using the shared tier thresholds.
@@ -276,13 +389,28 @@ class IAMOrchestrator {
     const mean = this.metrics.totalDecisions > 0 ? this.metrics.cumulativeDecisionTimeMs / this.metrics.totalDecisions : 0;
     const ago = this.lastRunAt ? Math.max(0, Math.round((Date.now() - this.lastRunAt) / 1000)) : null;
     const lastRun = ago === null ? 'not yet' : ago < 60 ? `${ago}s ago` : `${Math.round(ago / 60)}m ago`;
+    const decisionProvider = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)
+      ? 'gemini'
+      : process.env.ANTHROPIC_API_KEY
+      ? 'claude'
+      : process.env.OPENAI_API_KEY
+      ? 'openai'
+      : 'heuristic';
+    const model = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)
+      ? process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+      : process.env.ANTHROPIC_API_KEY
+      ? process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5'
+      : process.env.OPENAI_API_KEY
+      ? process.env.OPENAI_MODEL || 'gpt-4o-mini'
+      : null;
+
     return {
       status: 'Active',
       lastRun,
       policiesLoaded: this.policyAgent.getPolicyCount(),
       latency: Math.round(mean * 100) / 100,
-      decisionProvider: process.env.ANTHROPIC_API_KEY ? 'claude' : 'heuristic',
-      model: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5' : null,
+      decisionProvider,
+      model,
       uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000),
     };
   }
